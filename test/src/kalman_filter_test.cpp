@@ -1,9 +1,12 @@
-#include "project/tmp.hpp"
-
 #include <gtest/gtest.h>
+
+#include "project/tmp.hpp"
+#include "kalman_filter.h"
 
 TEST(TmpAddTest, CheckValues)
 {
+  KalmanCpp::KalmanFilter kf;
+  kf.SayHello();
   ASSERT_EQ(tmp::add(1, 2), 3);
   EXPECT_TRUE(true);
 }

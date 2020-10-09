@@ -111,10 +111,12 @@ else()
   target_include_directories(
     ${PROJECT_NAME}
     PUBLIC 
-      $<INSTALL_INTERFACE:include>    
+      $<INSTALL_INTERFACE:include>
+      $<INSTALL_INTERFACE:src>
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/src
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    # PRIVATE
+    #   ${CMAKE_CURRENT_SOURCE_DIR}/src
   )
 	if(${PROJECT_NAME}_BUILD_EXECUTABLE)
 		target_include_directories(

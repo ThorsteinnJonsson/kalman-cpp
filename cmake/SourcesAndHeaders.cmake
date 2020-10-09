@@ -1,5 +1,6 @@
 set(sources
     src/tmp.cpp
+    src/kalman_filter.cpp
 )
 
 set(exe_sources
