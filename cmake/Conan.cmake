@@ -3,8 +3,8 @@ if(${PROJECT_NAME}_ENABLE_CONAN)
   # Setup Conan requires and options here:
   #
 
-  set(${PROJECT_NAME}_CONAN_REQUIRES "")
-  set(${PROJECT_NAME}_CONAN_OPTIONS "")
+  set(PROJECT_CONAN_REQUIRES "eigen/3.3.7")
+  set(PROJECT_CONAN_OPTIONS "")
 
   #
   # If `conan.cmake` (from https://github.com/conan-io/cmake-conan) does not exist, download it.
@@ -29,9 +29,9 @@ if(${PROJECT_NAME}_ENABLE_CONAN)
 
   conan_cmake_run(
     REQUIRES
-      ${CONAN_REQUIRES}
+      ${PROJECT_CONAN_REQUIRES}
     OPTIONS
-      ${CONAN_OPTIONS}
+      ${PROJECT_CONAN_OPTIONS}
     BASIC_SETUP
       CMAKE_TARGETS # Individual targets to link to
     BUILD

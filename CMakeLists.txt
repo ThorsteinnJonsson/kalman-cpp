@@ -136,17 +136,10 @@ message(STATUS "Finished setting up include directories.")
 # Model project dependencies 
 #
 
-# Identify and link with the specific "packages" the project uses
-#find_package(package_name package_version REQUIRED package_type [other_options])
-#target_link_libraries(
-#  ${PROJECT_NAME}
-#  PUBLIC
-#    dependency1 ...
-#  PRIVATE
-#    dependency2 ...
-#    ${PROJECT_NAME}_PROJECT_OPTIONS        
-#    ${PROJECT_NAME}_PROJECT_WARNINGS        
-#)
+target_link_libraries(${PROJECT_NAME}
+  PRIVATE
+  CONAN_PKG::eigen
+)
 
 verbose_message("Successfully added all dependencies and linked against them.")
 
