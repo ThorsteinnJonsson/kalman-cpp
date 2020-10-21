@@ -8,4 +8,4 @@ ExtendedKalmanFilter::~ExtendedKalmanFilter() {}
 
 void ExtendedKalmanFilter::Predict() {}
 
-void ExtendedKalmanFilter::Update() {}
+void ExtendedKalmanFilter::Update(const Eigen::VectorXf& z) {}

@@ -11,9 +11,14 @@ class ExtendedKalmanFilter {
   ~ExtendedKalmanFilter();
 
   void Predict();
-  void Update();
+  void Update(const Eigen::VectorXf& z);
 
  private:
+  Eigen::VectorXf x_;
+  Eigen::MatrixXf P_;
+
+  Eigen::MatrixXf Q_;
+  Eigen::MatrixXf R_;
 };
 
 }  // namespace KalmanCpp
