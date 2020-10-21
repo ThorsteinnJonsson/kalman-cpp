@@ -7,10 +7,8 @@ namespace KalmanCpp {
 
 class KalmanFilter {
  public:
-  KalmanFilter();
+  KalmanFilter(size_t state_dim);
   ~KalmanFilter() = default;
-
-  void SayHello() const;
 
  private:
   Eigen::VectorXf state_;

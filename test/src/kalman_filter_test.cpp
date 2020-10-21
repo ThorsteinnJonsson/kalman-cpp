@@ -2,10 +2,11 @@
 
 #include "kalman_filter.h"
 
-TEST(TmpAddTest, CheckValues)
+TEST(TmpAddTest, TestToDo)
 {
-  KalmanCpp::KalmanFilter kf;
-  kf.SayHello();
+  const size_t state_dim = 2;
+  KalmanCpp::KalmanFilter kf(state_dim);
+  (void)kf;
   EXPECT_TRUE(true);
 }
 
