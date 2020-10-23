@@ -280,3 +280,11 @@ if(${PROJECT_NAME}_ENABLE_UNIT_TESTING)
 	message(STATUS "Build unit tests for the project. Tests should always be found in the test folder\n")
   add_subdirectory(test)
 endif()
+
+#
+# Build examples
+#
+
+if (${PROJECT_NAME}_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
