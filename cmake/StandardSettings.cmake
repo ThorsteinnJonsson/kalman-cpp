@@ -53,7 +53,7 @@ option(${PROJECT_NAME}_ENABLE_CODE_COVERAGE "Enable code coverage through GCC." 
 option(${PROJECT_NAME}_ENABLE_DOXYGEN "Enable Doxygen documentation builds of source." OFF)
 
 #
-# Miscelanious options
+# Miscellaneous options
 #
 
 # Generate compile_commands.json for clang based tools
@@ -87,3 +87,10 @@ if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif()
+
+
+#
+# Examples
+#
+
+option(${PROJECT_NAME}_BUILD_EXAMPLES "Build examples" ON)
