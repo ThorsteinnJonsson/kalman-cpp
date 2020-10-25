@@ -5,6 +5,8 @@
 #include <chrono>
 #include <random>
 
+#include <matplot/matplot.h>
+
 struct Measurement {
   float val;
   float actual;
@@ -90,5 +92,12 @@ void RunExample() {
 
 int main() {
   RunExample();
+
+  std::vector<double> x = {1,2,3,4,5,6};
+  std::vector<double> y = {1,4,6,32,64,128};
+  matplot::plot(x,y,"-o");
+  matplot::hold(matplot::on);
+  matplot::show();
+
   return 0;
 }
