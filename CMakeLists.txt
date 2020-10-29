@@ -282,6 +282,12 @@ if(${PROJECT_NAME}_ENABLE_UNIT_TESTING)
 endif()
 
 #
+# Third-party libraries
+#
+
+add_subdirectory(external)
+
+#
 # Build examples
 #
 

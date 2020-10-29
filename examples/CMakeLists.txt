@@ -30,6 +30,7 @@ target_link_libraries(
   ${PROJECT_NAME}
   PRIVATE
     ${CMAKE_PROJECT_NAME}
+    matplot
 )
 
 
