@@ -30,14 +30,7 @@ target_link_libraries(
   ${PROJECT_NAME}
   PRIVATE
     ${CMAKE_PROJECT_NAME}
-    matplot
 )
 
-
-
-
-
-
-
-
-
+include(${CMAKE_SOURCE_DIR}/cmake/Utils.cmake)
+target_link_libraries_system(${PROJECT_NAME} PRIVATE matplot)
