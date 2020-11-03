@@ -6,8 +6,8 @@
 using namespace KalmanCpp;
 
 KalmanFilter::KalmanFilter(size_t state_dim, size_t meas_dim)
-    : nx_(static_cast<Eigen::Index>(state_dim)),
-      nz_(static_cast<Eigen::Index>(meas_dim)) {
+    : nx_(state_dim),
+      nz_(meas_dim) {
   x_ = Eigen::Vector2f::Zero(nx_);
   P_ = Eigen::MatrixXf::Zero(nx_, nx_);
 }

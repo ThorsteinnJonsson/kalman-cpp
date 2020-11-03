@@ -24,8 +24,8 @@ class KalmanFilter {
   void Print() const;
 
  private:
-  const Eigen::Index nx_;
-  const Eigen::Index nz_;
+  size_t nx_;
+  size_t nz_;
 
   Eigen::VectorXf x_;
   Eigen::MatrixXf P_;
