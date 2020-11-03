@@ -11,26 +11,28 @@ project(
 
 verbose_message("Adding examples under ${CMAKE_PROJECT_NAME}Examples...")
 
-#
-# Set the sources for the unit tests and add the executable(s)
-#
-
-set(test_sources 
-  src/example.cpp
-)
-add_executable(${PROJECT_NAME} ${test_sources})
+include(${CMAKE_SOURCE_DIR}/cmake/Utils.cmake)
 
 #
-# Set the compiler standard
+# Linear Kalman filter example
 #
-
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
-
+add_executable(KF_EXAMPLE src/example_kf.cpp)
+target_compile_features(KF_EXAMPLE PUBLIC cxx_std_17)
 target_link_libraries(
-  ${PROJECT_NAME}
+  KF_EXAMPLE
   PRIVATE
     ${CMAKE_PROJECT_NAME}
 )
+target_link_libraries_system(KF_EXAMPLE PRIVATE matplot)
 
-include(${CMAKE_SOURCE_DIR}/cmake/Utils.cmake)
-target_link_libraries_system(${PROJECT_NAME} PRIVATE matplot)
+#
+# Extended Kalman filter example
+#
+add_executable(EKF_EXAMPLE src/example_ekf.cpp)
+target_compile_features(EKF_EXAMPLE PUBLIC cxx_std_17)
+target_link_libraries(
+  EKF_EXAMPLE
+  PRIVATE
+    ${CMAKE_PROJECT_NAME}
+)
+target_link_libraries_system(EKF_EXAMPLE PRIVATE matplot)

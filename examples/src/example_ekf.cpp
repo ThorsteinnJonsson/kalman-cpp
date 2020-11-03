@@ -1,20 +1,21 @@
 #include <iostream>
 
-#include "kalman_filter.h"
+#include "extended_kalman_filter.h"
 
 #include <algorithm>
 #include <chrono>
 #include <random>
 #include <cmath>
+#include <iostream>
 
 #include <matplot/matplot.h>
 
-KalmanCpp::KalmanFilter SetupFilter(size_t state_dim,
+KalmanCpp::ExtendedKalmanFilter SetupFilter(size_t state_dim,
                                     size_t meas_dim,
                                     float meas_var,
                                     float process_var,
                                     float dt) {
-  KalmanCpp::KalmanFilter kf(state_dim, meas_dim);
+  KalmanCpp::ExtendedKalmanFilter kf(state_dim, meas_dim);
 
   // Initial values
   Eigen::Vector2f init_state =
@@ -34,15 +35,35 @@ KalmanCpp::KalmanFilter SetupFilter(size_t state_dim,
   kf.InitUncertainty(process_noise, measurement_noise);
 
   // State transition
-  Eigen::Matrix2f state_transition_matrix = Eigen::Matrix2f::Identity();
-  state_transition_matrix(0, 1) = dt;
-  kf.SetStateTransitionMatrix(state_transition_matrix);
+  auto state_transition = [](const Eigen::VectorXf& x, float timestep) -> Eigen::VectorXf {
+    Eigen::Vector2f x_new;
+    x_new(0) = x(0) + timestep * x(1);
+    x_new(1) = x(1);
+    return x_new; 
+  };
+  kf.SetStateTransitionFunction(std::move(state_transition));
 
-  // Measurment function
-  Eigen::MatrixXf measurement_function =
-      Eigen::MatrixXf::Zero(meas_dim, state_dim);
-  measurement_function(0, 0) = 1.0f;
-  kf.SetMeasurementFunctionMatrix(measurement_function);
+  auto state_transition_jacobian = [](const Eigen::VectorXf&, float timestep) -> Eigen::MatrixXf {
+    Eigen::Matrix2f jacobian = Eigen::Matrix2f::Identity();
+    jacobian(0,1) = timestep;
+    return jacobian;
+  };
+  kf.SetStateTransitionJacobian(std::move(state_transition_jacobian));
+
+  // Measurment function 
+  auto measurement_func = [](const Eigen::VectorXf& x) -> Eigen::VectorXf {
+    Eigen::MatrixXf z(1, 1);
+    z << x(0);
+    return z;
+  };
+  kf.SetMeasurementFunction(std::move(measurement_func));
+
+  auto measurement_jacobian = [](const Eigen::VectorXf&) -> Eigen::MatrixXf {
+    Eigen::MatrixXf jacobian = Eigen::MatrixXf::Zero(1,2);
+    jacobian(0,0) = 1.0f;
+    return jacobian;
+  };
+  kf.SetMeasurementJacobian(std::move(measurement_jacobian));
 
   return kf;
 }
@@ -138,8 +159,7 @@ void RunExample() {
   const float dt = 1.0f;  // Assume constant timestep
   const float meas_var = 10.0f;
   const float process_var = 0.1f;
-  KalmanCpp::KalmanFilter kf = SetupFilter(state_dim, meas_dim, meas_var, process_var, dt);
-  // kf.Print();
+  KalmanCpp::ExtendedKalmanFilter kf = SetupFilter(state_dim, meas_dim, meas_var, process_var, dt);
 
   // Get measurements
   const size_t num_measurements = 50;
@@ -151,7 +171,7 @@ void RunExample() {
   // Run simulation
   std::vector<Eigen::VectorXf> track;
   for (auto&& meas : measurements) {
-    kf.Predict();
+    kf.Predict(dt);
 
     Eigen::MatrixXf z(1, 1);
     z << meas.value;
