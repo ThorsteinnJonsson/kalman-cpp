@@ -3,6 +3,7 @@
 
 #include <eigen3/Eigen/Core>
 #include <functional>
+#include <optional>
 
 namespace KalmanCpp {
 
@@ -26,6 +27,8 @@ class ExtendedKalmanFilter {
 
   void SetControlInputFunction(const Eigen::MatrixXf& B) { B_ = B; }
 
+  void SetResidualFunction(std::function<Eigen::VectorXf(const Eigen::VectorXf&, const Eigen::VectorXf&)>&& residual_func) { residual_ = residual_func; }
+
   const Eigen::VectorXf& State() const { return x_; }
   const Eigen::MatrixXf& Uncertainty() const { return P_; }
 
@@ -46,6 +49,7 @@ class ExtendedKalmanFilter {
   
   std::function<Eigen::VectorXf(const Eigen::VectorXf&)> h_; // convert state to measurement
   std::function<Eigen::MatrixXf(const Eigen::VectorXf&)> h_jacobian_;
+  std::optional<std::function<Eigen::VectorXf(const Eigen::VectorXf&, const Eigen::VectorXf&)>> residual_;
 
   Eigen::MatrixXf B_;
 

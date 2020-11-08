@@ -67,6 +67,12 @@ KalmanCpp::ExtendedKalmanFilter SetupFilter(size_t state_dim,
   };
   kf.SetMeasurementJacobian(std::move(measurement_jacobian));
 
+  auto residual_func = [](const Eigen::VectorXf& a, const Eigen::VectorXf& b) -> Eigen::VectorXf {
+    Eigen::Vector2f y = a - b;
+    return y;
+  };
+  kf.SetResidualFunction(std::move(residual_func));
+
   // Control input
   Eigen::MatrixXf B = Eigen::MatrixXf::Zero(4,4);
   B(3,3) = 1.0f;
