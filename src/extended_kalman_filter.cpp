@@ -21,8 +21,15 @@ void ExtendedKalmanFilter::Predict(float dt) {
   P_ = F * P_ * F.transpose() + Q_;
 }
 
+void ExtendedKalmanFilter::Predict(const Eigen::VectorXf& u, float dt) {
+  x_ = f_(x_, dt) + B_ * u;
+  const auto F = f_jacobian_(x_, dt);
+  P_ = F * P_ * F.transpose() + Q_;
+}
+
 void ExtendedKalmanFilter::Update(const Eigen::VectorXf& z) {
-  const Eigen::VectorXf y = z - h_(x_);
+
+  const Eigen::VectorXf y = (residual_.has_value()) ? (*residual_)(z,h_(x_)) : z - h_(x_);
   const auto H = h_jacobian_(x_);
   const Eigen::MatrixXf S = (H * P_ * H.transpose() + R_);
   const Eigen::MatrixXf K = P_ * H.transpose() * S.inverse();
