@@ -125,34 +125,31 @@ void PlotResult(const std::vector<Eigen::Vector2f>& measurements,
 
 class BallSim {
  public:
-  BallSim(float x0, float y0, float v, float launch_angle, const Eigen::Vector2f& noise) 
-      : x_(x0),
-        y_(y0),
-        vx_(v * std::cos(launch_angle)),
-        vy_(v * std::sin(launch_angle)),
+  BallSim(const Eigen::Vector2f& initial_pos, const Eigen::Vector2f& initial_vel, const Eigen::Vector2f& noise) 
+      : pos_(initial_pos),
+        vel_(initial_vel),
         noise_(noise) {
     std::random_device rd{};
     gen_ = std::mt19937{rd()};
   }
 
   Eigen::Vector2f Update(float dt, float vel_wind=0.0f) {
-    x_ += vx_ * dt;
-    y_ += vy_ * dt;
+    pos_ += vel_ * dt;
 
-    const float vx_wind = vx_ - vel_wind;
-    const float v = std::sqrt(vx_wind*vx_wind + vy_*vy_);
+    const float vx_wind = vel_(0) - vel_wind;
+    const float v = std::sqrt(vx_wind*vx_wind + vel_(1)*vel_(1));
     const float F = DragForce(v);
 
-    vx_ -= F * vx_wind * dt;
-    vy_ += -9.81f * dt - F * vy_ * dt;
+    vel_(0) -= F * vx_wind * dt;
+    vel_(1) += -9.81f * dt - F * vel_(1) * dt;
 
-    Eigen::Vector2f pos;
-    pos << x_ + RandFloat() * noise_(0),
-           y_ + RandFloat() * noise_(1);
-    return pos;
+    Eigen::Vector2f measurement;
+    measurement << pos_(0) + RandFloat() * noise_(0),
+                   pos_(1) + RandFloat() * noise_(1);
+    return measurement;
   }
 
-  bool AboveGround() const { return y_ > 0.0f; }
+  bool AboveGround() const { return pos_(1) > 0.0f; }
 
  private:
   float RandFloat() { return dist_(gen_); }
@@ -163,10 +160,8 @@ class BallSim {
   }
 
  private: 
-  float x_;
-  float y_;
-  float vx_;
-  float vy_;
+  Eigen::Vector2f pos_;
+  Eigen::Vector2f vel_;
   const Eigen::Vector2f noise_;
 
   std::mt19937 gen_;
@@ -183,12 +178,15 @@ void RunExample() {
   KalmanCpp::ExtendedKalmanFilter kf = SetupFilter(state_dim, meas_dim);
 
   // Set up simulation
-  const float x0 = 0.0f;
-  const float y0 = 1.0f;
-  const float initial_velocity = 50.0f;
+  const float initial_speed = 50.0f;
   const float launch_angle = M_PI/180.0f * 35.0f;
+  Eigen::Vector2f initial_pos;
+  initial_pos << 0.0f, 1.0f;
+  Eigen::Vector2f initial_vel;
+  initial_vel << initial_speed * std::cos(launch_angle),
+                 initial_speed * std::sin(launch_angle);
   const Eigen::Vector2f sim_noise = Eigen::Vector2f::Constant(0.3f);
-  BallSim ball(x0, y0, initial_velocity, launch_angle, sim_noise);
+  BallSim ball(initial_pos, initial_vel, sim_noise);
   
   float t = 0.0f;
   const float dt = 0.1f;  // Assume constant timestep
