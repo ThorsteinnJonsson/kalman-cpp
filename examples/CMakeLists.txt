@@ -36,3 +36,16 @@ target_link_libraries(
     ${CMAKE_PROJECT_NAME}
 )
 target_link_libraries_system(EKF_EXAMPLE PRIVATE matplot)
+
+
+#
+# Linear Kalman filter vs Extended Kalman filter example
+#
+add_executable(KF_VS_EKF_EXAMPLE src/example_kf_vs_ekf.cpp)
+target_compile_features(KF_VS_EKF_EXAMPLE PUBLIC cxx_std_17)
+target_link_libraries(
+  KF_VS_EKF_EXAMPLE
+  PRIVATE
+    ${CMAKE_PROJECT_NAME}
+)
+target_link_libraries_system(KF_VS_EKF_EXAMPLE PRIVATE matplot)
