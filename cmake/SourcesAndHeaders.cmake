@@ -1,5 +1,4 @@
 set(sources
-    src/kalman_filter.cpp
     src/extended_kalman_filter.cpp
 )
 
