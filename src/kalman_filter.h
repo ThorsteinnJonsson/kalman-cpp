@@ -7,8 +7,8 @@
 namespace KalmanCpp {
 
 template <typename T, int StateDim, int MeasDim>  // TODO check if T is floating
-                                                  // point type
-                                                  class KalmanFilter {
+// point type
+class KalmanFilter {
  private:
   using StateVec = Eigen::Matrix<T, StateDim, 1>;
   using StateMat = Eigen::Matrix<T, StateDim, StateDim>;

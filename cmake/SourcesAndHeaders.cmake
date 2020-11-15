@@ -1,5 +1,5 @@
 set(sources
-    src/extended_kalman_filter.cpp
+  src/rip.cpp
 )
 
 set(exe_sources
