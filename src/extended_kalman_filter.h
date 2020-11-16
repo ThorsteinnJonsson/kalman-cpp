@@ -41,7 +41,7 @@ class ExtendedKalmanFilter {
   void SetMeasurementFunction(std::function<MeasVec(const StateVec&)>&& func) {
     h_ = func;
   }
-  void SetMeasurementJacobian(std::function<MeasMat(const StateVec&)>&& func) {
+  void SetMeasurementJacobian(std::function<ObservationModelMat(const StateVec&)>&& func) {
     h_jacobian_ = func;
   }
 
@@ -65,10 +65,10 @@ class ExtendedKalmanFilter {
   MeasMat R_;
 
   std::function<StateVec(const StateVec&, float dt)> f_;
-  std::function<MeasMat(const StateVec&, float dt)> f_jacobian_;
+  std::function<StateMat(const StateVec&, float dt)> f_jacobian_;
 
   std::function<MeasVec(const StateVec&)> h_;
-  std::function<MeasMat(const StateVec&)> h_jacobian_;
+  std::function<ObservationModelMat(const StateVec&)> h_jacobian_;
   std::optional<std::function<MeasVec(const MeasVec&, const MeasVec&)>>
       residual_;
 
