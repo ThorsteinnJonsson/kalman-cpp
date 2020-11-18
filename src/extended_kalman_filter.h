@@ -2,58 +2,119 @@
 #define KALMAN_CPP_EKF_H
 
 #include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/LU>
 #include <functional>
 #include <optional>
 
 namespace KalmanCpp {
 
+template <typename T, int StateDim, int MeasDim>
 class ExtendedKalmanFilter {
+ private:
+  using StateVec = Eigen::Matrix<T, StateDim, 1>;
+  using StateMat = Eigen::Matrix<T, StateDim, StateDim>;
+  using MeasVec = Eigen::Matrix<T, MeasDim, 1>;
+  using MeasMat = Eigen::Matrix<T, MeasDim, MeasDim>;
+  using ObservationModelMat = Eigen::Matrix<T, MeasDim, StateDim>;
+  using KalmanGainMat = Eigen::Matrix<T, StateDim, MeasDim>;
+
  public:
-  ExtendedKalmanFilter(size_t state_dim, size_t meas_dim);
-  ~ExtendedKalmanFilter() = default;
+  ExtendedKalmanFilter() = default;
 
   void Predict(float dt);
-  void Predict(const Eigen::VectorXf& u, float dt);
-  void Update(const Eigen::VectorXf& z);
+  void Predict(const StateVec& u, float dt);
+  void Update(const MeasVec& z);
 
-  void InitState(const Eigen::VectorXf& state, const Eigen::MatrixXf& cov);
-  void InitUncertainty(const Eigen::MatrixXf& process_noise, const Eigen::MatrixXf& measurement_noise);
+  void InitState(const StateVec& state, const StateMat& cov);
+  void InitUncertainty(const StateMat& process_noise,
+                       const MeasMat& measurement_noise);
 
-  void SetStateTransitionFunction(std::function<Eigen::VectorXf(const Eigen::VectorXf&, float dt)>&& func) { f_ = func; }
-  void SetStateTransitionJacobian(std::function<Eigen::MatrixXf(const Eigen::VectorXf&, float dt)>&& func) { f_jacobian_ = func; }
+  void SetStateTransitionFunction(
+      std::function<StateVec(const StateVec&, float dt)>&& func) {
+    f_ = func;
+  }
+  void SetStateTransitionJacobian(
+      std::function<StateMat(const StateVec&, float dt)>&& func) {
+    f_jacobian_ = func;
+  }
 
-  void SetMeasurementFunction(std::function<Eigen::VectorXf(const Eigen::VectorXf&)>&& func) { h_ = func; }
-  void SetMeasurementJacobian(std::function<Eigen::MatrixXf(const Eigen::VectorXf&)>&& func) { h_jacobian_ = func; }
+  void SetMeasurementFunction(std::function<MeasVec(const StateVec&)>&& func) {
+    h_ = func;
+  }
+  void SetMeasurementJacobian(std::function<ObservationModelMat(const StateVec&)>&& func) {
+    h_jacobian_ = func;
+  }
 
-  void SetControlInputFunction(const Eigen::MatrixXf& B) { B_ = B; }
+  void SetControlInputFunction(const StateMat& B) {
+    B_ = B; // TODO use lambda instead
+  }
 
-  void SetResidualFunction(std::function<Eigen::VectorXf(const Eigen::VectorXf&, const Eigen::VectorXf&)>&& residual_func) { residual_ = residual_func; }
+  void SetResidualFunction(
+      std::function<MeasVec(const MeasVec&, const MeasVec&)>&& residual_func) {
+    residual_ = residual_func;
+  }
 
-  const Eigen::VectorXf& State() const { return x_; }
-  const Eigen::MatrixXf& Uncertainty() const { return P_; }
-
-  void Print() const;
+  const StateVec& State() const { return x_; }
+  const StateMat& Uncertainty() const { return P_; }
 
  private:
-  size_t nx_;
-  size_t nz_;
+  StateVec x_ = StateVec::Zero();
+  StateMat P_ = StateMat::Zero();
 
-  Eigen::VectorXf x_;
-  Eigen::MatrixXf P_;
+  StateMat Q_;
+  MeasMat R_;
 
-  Eigen::MatrixXf Q_;
-  Eigen::MatrixXf R_;
+  std::function<StateVec(const StateVec&, float dt)> f_;
+  std::function<StateMat(const StateVec&, float dt)> f_jacobian_;
 
-  std::function<Eigen::VectorXf(const Eigen::VectorXf&, float dt)> f_; // convert state to next state
-  std::function<Eigen::MatrixXf(const Eigen::VectorXf&, float dt)> f_jacobian_;
-  
-  std::function<Eigen::VectorXf(const Eigen::VectorXf&)> h_; // convert state to measurement
-  std::function<Eigen::MatrixXf(const Eigen::VectorXf&)> h_jacobian_;
-  std::optional<std::function<Eigen::VectorXf(const Eigen::VectorXf&, const Eigen::VectorXf&)>> residual_;
+  std::function<MeasVec(const StateVec&)> h_;
+  std::function<ObservationModelMat(const StateVec&)> h_jacobian_;
+  std::optional<std::function<MeasVec(const MeasVec&, const MeasVec&)>>
+      residual_;
 
-  Eigen::MatrixXf B_;
-
+  StateMat B_;  // Control model
 };
+
+template <typename T, int StateDim, int MeasDim>
+void ExtendedKalmanFilter<T, StateDim, MeasDim>::Predict(float dt) {
+  x_ = f_(x_, dt);
+  const auto F = f_jacobian_(x_, dt);
+  P_ = F * P_ * F.transpose() + Q_;
+}
+
+template <typename T, int StateDim, int MeasDim>
+void ExtendedKalmanFilter<T, StateDim, MeasDim>::Predict(const StateVec& u,
+                                                         float dt) {
+  x_ = f_(x_, dt) + B_ * u;
+  const auto F = f_jacobian_(x_, dt);
+  P_ = F * P_ * F.transpose() + Q_;
+}
+
+template <typename T, int StateDim, int MeasDim>
+void ExtendedKalmanFilter<T, StateDim, MeasDim>::Update(const MeasVec& z) {
+  const Eigen::VectorXf y =
+      (residual_.has_value()) ? (*residual_)(z, h_(x_)) : z - h_(x_);
+  const auto H = h_jacobian_(x_);
+  const Eigen::MatrixXf S = (H * P_ * H.transpose() + R_);
+  const Eigen::MatrixXf K = P_ * H.transpose() * S.inverse();
+  const Eigen::MatrixXf I = StateMat::Identity();
+  x_ = x_ + K * y;
+  P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
+}
+
+template <typename T, int StateDim, int MeasDim>
+void ExtendedKalmanFilter<T, StateDim, MeasDim>::InitState(
+    const StateVec& state, const StateMat& cov) {
+  x_ = state;
+  P_ = cov;
+}
+
+template <typename T, int StateDim, int MeasDim>
+void ExtendedKalmanFilter<T, StateDim, MeasDim>::InitUncertainty(
+    const StateMat& process_noise, const MeasMat& measurement_noise) {
+  Q_ = process_noise;
+  R_ = measurement_noise;
+}
 
 }  // namespace KalmanCpp
 
