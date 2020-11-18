@@ -96,14 +96,10 @@ void PlotResult(const std::vector<Measurement>& measurements,
   matplot::show();
 }
 
-void RunExample() {
-  // Set up Kalman filter
-  constexpr size_t state_dim = 2;
-  constexpr size_t meas_dim = 1;
-  constexpr float process_var = 0.1f;
-  constexpr float meas_var = 10.0f;
-  constexpr float dt = 1.0f;  // Assume constant timestep
-  KalmanCpp::KalmanFilter<float, state_dim, meas_dim> kf;
+template <int StateDim, int MeasDim>
+KalmanCpp::KalmanFilter<float, StateDim, MeasDim> SetupFilter(float process_var, float meas_var, float dt) {
+
+  KalmanCpp::KalmanFilter<float, StateDim, MeasDim> kf;
 
   Eigen::Vector2f init_state =
       Eigen::Vector2f::Zero();  // Position and velocity
@@ -127,9 +123,22 @@ void RunExample() {
 
   // Measurment function
   Eigen::MatrixXf measurement_function =
-      Eigen::MatrixXf::Zero(meas_dim, state_dim);
+      Eigen::MatrixXf::Zero(MeasDim, StateDim);
   measurement_function(0, 0) = 1.0f;
   kf.SetMeasurementFunctionMatrix(measurement_function);
+
+  return kf;
+}
+
+void RunExample() {
+  // Set up Kalman filter
+  constexpr size_t state_dim = 2;
+  constexpr size_t meas_dim = 1;
+  constexpr float filter_process_var = 0.1f;
+  constexpr float filter_meas_var = 10.0f;
+  constexpr float dt = 1.0f;  // Assume constant timestep
+  auto kf = SetupFilter<state_dim, meas_dim>(filter_process_var, filter_meas_var, dt);
+
 
   // Get measurements
   const size_t num_measurements = 50;

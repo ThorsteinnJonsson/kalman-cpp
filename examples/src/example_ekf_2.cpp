@@ -48,8 +48,6 @@ void PlotResult(const std::vector<Eigen::Vector2f>& measurements,
 }
 
 
-
-
 class BallSim {
  public:
   BallSim(const Eigen::Vector2f& initial_pos, const Eigen::Vector2f& initial_vel, const Eigen::Vector2f& noise) 
@@ -96,12 +94,9 @@ class BallSim {
 };
 
 
-
-void RunExample() {
-  // Set up Kalman filter
-  constexpr size_t state_dim = 4;
-  constexpr size_t meas_dim = 2;
-  KalmanCpp::ExtendedKalmanFilter<float, state_dim, meas_dim> kf;
+template <int StateDim, int MeasDim>
+KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> SetupFilter() {
+  KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> kf;
 
   // Initial values
   const float initial_velocity = 50.0f;
@@ -166,7 +161,14 @@ void RunExample() {
   B(3,3) = 1.0f;
   kf.SetControlInputFunction(B);
 
+  return kf;
+}
 
+void RunExample() {
+  // Set up Kalman filter
+  constexpr size_t state_dim = 4;
+  constexpr size_t meas_dim = 2;
+  auto kf = SetupFilter<state_dim, meas_dim>();
 
   // Set up simulation
   const float gt_initial_speed = 50.0f;
@@ -201,9 +203,7 @@ void RunExample() {
     Eigen::Vector2f estimate;
     estimate << kf.State()(0), kf.State()(2);
     estimates.push_back(estimate);
-
   }
-
 
   PlotResult(measurements, estimates);
 }
