@@ -4,48 +4,11 @@
 
 #include <algorithm>
 #include <chrono>
-#include <random>
 #include <cmath>
+#include <random>
 
-#include <matplot/matplot.h>
+#include "matplot/matplot.h"
 
-KalmanCpp::KalmanFilter SetupFilter(size_t state_dim,
-                                    size_t meas_dim,
-                                    float meas_var,
-                                    float process_var,
-                                    float dt) {
-  KalmanCpp::KalmanFilter kf(state_dim, meas_dim);
-
-  // Initial values
-  Eigen::Vector2f init_state =
-      Eigen::Vector2f::Zero();  // Position and velocity
-  Eigen::Matrix2f init_cov;
-  init_cov << 500.0f, 0.0f, 0.0f, 49.0f;
-  kf.InitState(init_state, init_cov);
-
-  // Noise
-  Eigen::Matrix2f process_noise;
-  process_noise << 0.25f * std::pow(dt,4) * process_var,
-                   0.5f * std::pow(dt,3) * process_var,
-                   0.5f * std::pow(dt,3) * process_var,
-                         std::pow(dt,2) * process_var;
-  Eigen::MatrixXf measurement_noise = Eigen::MatrixXf(1, 1);
-  measurement_noise << meas_var;
-  kf.InitUncertainty(process_noise, measurement_noise);
-
-  // State transition
-  Eigen::Matrix2f state_transition_matrix = Eigen::Matrix2f::Identity();
-  state_transition_matrix(0, 1) = dt;
-  kf.SetStateTransitionMatrix(state_transition_matrix);
-
-  // Measurment function
-  Eigen::MatrixXf measurement_function =
-      Eigen::MatrixXf::Zero(meas_dim, state_dim);
-  measurement_function(0, 0) = 1.0f;
-  kf.SetMeasurementFunctionMatrix(measurement_function);
-
-  return kf;
-}
 
 struct Measurement {
   float ground_truth;
@@ -95,17 +58,19 @@ void PlotResult(const std::vector<Measurement>& measurements,
                  std::back_inserter(ground_truth),
                  [](const Measurement& m) { return m.ground_truth; });
   std::vector<double> upper_std;
-  std::transform(
-      measurements.begin(),
-      measurements.end(),
-      std::back_inserter(upper_std),
-      [&](const Measurement& m) { return m.ground_truth + std::sqrt(true_meas_var); });
+  std::transform(measurements.begin(),
+                 measurements.end(),
+                 std::back_inserter(upper_std),
+                 [&](const Measurement& m) {
+                   return m.ground_truth + std::sqrt(true_meas_var);
+                 });
   std::vector<double> lower_std;
-  std::transform(
-      measurements.begin(),
-      measurements.end(),
-      std::back_inserter(lower_std),
-      [&](const Measurement& m) { return m.ground_truth - std::sqrt(true_meas_var); });
+  std::transform(measurements.begin(),
+                 measurements.end(),
+                 std::back_inserter(lower_std),
+                 [&](const Measurement& m) {
+                   return m.ground_truth - std::sqrt(true_meas_var);
+                 });
 
   std::vector<double> measured_values;
   std::transform(measurements.begin(),
@@ -131,22 +96,56 @@ void PlotResult(const std::vector<Measurement>& measurements,
   matplot::show();
 }
 
+template <int StateDim, int MeasDim>
+KalmanCpp::KalmanFilter<float, StateDim, MeasDim> SetupFilter(float process_var, float meas_var, float dt) {
+
+  KalmanCpp::KalmanFilter<float, StateDim, MeasDim> kf;
+
+  Eigen::Vector2f init_state =
+      Eigen::Vector2f::Zero();  // Position and velocity
+  Eigen::Matrix2f init_cov;
+  init_cov << 500.0f, 0.0f, 0.0f, 49.0f;
+  kf.InitState(init_state, init_cov);
+
+  // Noise
+  Eigen::Matrix2f process_noise;
+  process_noise << 0.25f * std::pow(dt, 4) * process_var,
+      0.5f * std::pow(dt, 3) * process_var,
+      0.5f * std::pow(dt, 3) * process_var, std::pow(dt, 2) * process_var;
+  Eigen::MatrixXf measurement_noise = Eigen::MatrixXf(1, 1);
+  measurement_noise << meas_var;
+  kf.InitUncertainty(process_noise, measurement_noise);
+
+  // State transition
+  Eigen::Matrix2f state_transition_matrix = Eigen::Matrix2f::Identity();
+  state_transition_matrix(0, 1) = dt;
+  kf.SetStateTransitionMatrix(state_transition_matrix);
+
+  // Measurment function
+  Eigen::MatrixXf measurement_function =
+      Eigen::MatrixXf::Zero(MeasDim, StateDim);
+  measurement_function(0, 0) = 1.0f;
+  kf.SetMeasurementFunctionMatrix(measurement_function);
+
+  return kf;
+}
+
 void RunExample() {
   // Set up Kalman filter
-  const size_t state_dim = 2;
-  const size_t meas_dim = 1;
-  const float dt = 1.0f;  // Assume constant timestep
-  const float meas_var = 10.0f;
-  const float process_var = 0.1f;
-  KalmanCpp::KalmanFilter kf = SetupFilter(state_dim, meas_dim, meas_var, process_var, dt);
-  kf.Print();
+  constexpr size_t state_dim = 2;
+  constexpr size_t meas_dim = 1;
+  constexpr float filter_process_var = 0.1f;
+  constexpr float filter_meas_var = 10.0f;
+  constexpr float dt = 1.0f;  // Assume constant timestep
+  auto kf = SetupFilter<state_dim, meas_dim>(filter_process_var, filter_meas_var, dt);
+
 
   // Get measurements
   const size_t num_measurements = 50;
   const float true_meas_var = 10.0f;
   const float true_process_var = 0.1f;
-  std::vector<Measurement> measurements =
-      GenerateMeasurements(true_meas_var, true_process_var, dt, num_measurements);
+  std::vector<Measurement> measurements = GenerateMeasurements(
+      true_meas_var, true_process_var, dt, num_measurements);
 
   // Run simulation
   std::vector<Eigen::VectorXf> track;
@@ -159,10 +158,9 @@ void RunExample() {
 
     track.push_back(kf.State());
   }
-  kf.Print();
+
   PlotResult(measurements, track, true_meas_var);
 }
-
 
 int main() {
   RunExample();
