@@ -2,6 +2,8 @@
 #include <eigen3/unsupported/Eigen/AutoDiff>
 #include <iostream>
 
+// TODO also look at
+// https://joelcfd.com/automatic-differentiation/
 
 // template <typename T>
 // T myfun(T const & a, T const & b) {
