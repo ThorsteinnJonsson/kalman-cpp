@@ -65,6 +65,9 @@ class ExtendedKalmanFilter {
 
   const StateVec& State() const { return x_; }
   const StateMat& Uncertainty() const { return P_; }
+ 
+ private:
+  StateVec PredictState(float dt);
 
  private:
   StateVec x_ = StateVec::Zero();
@@ -87,34 +90,31 @@ class ExtendedKalmanFilter {
 };
 
 template <typename T, int StateDim, int MeasDim>
-void ExtendedKalmanFilter<T, StateDim, MeasDim>::Predict(float dt) {
+typename ExtendedKalmanFilter<T, StateDim, MeasDim>::StateVec ExtendedKalmanFilter<T, StateDim, MeasDim>::PredictState(float dt) {
   StateVec x_new;
   for (int i = 0; i < StateDim; ++i) {
     x_new(i) = fs_[i](x_,dt);
   }
-  x_ = x_new;
+  return x_new;  
+}
+
+template <typename T, int StateDim, int MeasDim>
+void ExtendedKalmanFilter<T, StateDim, MeasDim>::Predict(float dt) {
+  x_ = PredictState(dt);
   const auto F = f_jacobian_(x_, dt);
-  const auto F_numerical = Numerical::CalculateJacobian<T,StateDim,StateDim>(x_, fsj_, dt);
-  std::cout << "F:\n" << F << std::endl;
-  std::cout << "F_numerical:\n" << F_numerical << std::endl;
-  std::cout << "\n\n";
+  // const auto F_numerical = Numerical::CalculateJacobian<T,StateDim,StateDim>(x_, fsj_, dt);
+  // std::cout << "F:\n" << F << std::endl;
+  // std::cout << "F_numerical:\n" << F_numerical << std::endl;
+  // std::cout << "\n\n";
   P_ = F * P_ * F.transpose() + Q_;
 }
 
 template <typename T, int StateDim, int MeasDim>
 void ExtendedKalmanFilter<T, StateDim, MeasDim>::Predict(const StateVec& u,
                                                          float dt) {
-  StateVec x_new;
-  for (int i = 0; i < StateDim; ++i) {
-    x_new(i) = fs_[i](x_,dt);
-  }
-  x_ = x_new + B_ * u;
+  x_ = PredictState(dt) + B_ * u;
   const auto F = f_jacobian_(x_, dt);
-  const auto F_numerical = Numerical::CalculateJacobian<T,StateDim,StateDim>(x_, fsj_, dt);
-  std::cout << "F:\n" << F << std::endl;
-  std::cout << "F_numerical:\n" << F_numerical << std::endl;
-  std::cout << "\n\n";
-
+  // const auto F_numerical = Numerical::CalculateJacobian<T,StateDim,StateDim>(x_, fsj_, dt);
   P_ = F * P_ * F.transpose() + Q_;
 }
 
