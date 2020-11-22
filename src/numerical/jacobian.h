@@ -8,28 +8,33 @@
 
 namespace KalmanCpp::Numerical {
 
+template <typename T, int N>
+using JacobianFunction = std::function<Eigen::AutoDiffScalar<Eigen::Matrix<T, N, 1>>(
+    const std::array<Eigen::AutoDiffScalar<Eigen::Matrix<T, N, 1>>, N>&, float)>;
+
+template <typename T, int N>
+using JacobianScalar = Eigen::AutoDiffScalar<Eigen::Matrix<T, N, 1>>;
+
 template <typename T, int N, int M>
 Eigen::Matrix<T, N, M> CalculateJacobian(const Eigen::Matrix<T, N, 1>& x,
-    std::array<std::function<Eigen::AutoDiffScalar<Eigen::Matrix<T, N, 1>>(const std::array<Eigen::AutoDiffScalar<Eigen::Matrix<T, N, 1>>, N>&, float)>, M> fs, float dt) {
+                                         std::array<JacobianFunction<T, N>, M> functions,
+                                         float timestep) {
   Eigen::Matrix<T, N, M> jacobian;
 
   for (int i = 0; i < M; ++i) {
-    std::array<Eigen::AutoDiffScalar<Eigen::Matrix<T, N, 1>>, N> scalars;
+    std::array<JacobianScalar<T, N>, N> scalars;
     for (int j = 0; j < N; ++j) {
       scalars[j].value() = x(j);
-      scalars[j].derivatives() = Eigen::Matrix<T, N, 1>::Unit(N,j);
+      scalars[j].derivatives() = Eigen::Matrix<T, N, 1>::Unit(N, j);
     }
 
-    std::function<Eigen::AutoDiffScalar<Eigen::Matrix<T, N, 1>>(const std::array<Eigen::AutoDiffScalar<Eigen::Matrix<T, N, 1>>, N>&, float)> func = fs[i];
-    Eigen::AutoDiffScalar<Eigen::Matrix<T, N, 1>> F = func(scalars, dt); 
+    const JacobianFunction<T, N>& func = functions[i];
+    JacobianScalar<T, N> F = func(scalars, timestep);
 
     for (int j = 0; j < N; ++j) {
-      jacobian(i,j) = F.derivatives()(j);
+      jacobian(i, j) = F.derivatives()(j);
     }
   }
-  
-
-
 
   return jacobian;
 }
