@@ -11,7 +11,7 @@
 
 namespace KalmanCpp {
 
-template <typename T, int StateDim, int MeasDim>
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod=JacobianCalculationMethod::Manual>
 class ExtendedKalmanFilter {
  private:
   using StateVec = Eigen::Matrix<T, StateDim, 1>;
@@ -63,6 +63,8 @@ class ExtendedKalmanFilter {
     residual_ = residual_func;
   }
 
+  StateMat GetStateTransitionJacobian(float dt);
+
   const StateVec& State() const { return x_; }
   const StateMat& Uncertainty() const { return P_; }
  
@@ -89,8 +91,8 @@ class ExtendedKalmanFilter {
   StateMat B_;  // Control model
 };
 
-template <typename T, int StateDim, int MeasDim>
-typename ExtendedKalmanFilter<T, StateDim, MeasDim>::StateVec ExtendedKalmanFilter<T, StateDim, MeasDim>::PredictState(float dt) {
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+typename ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateVec ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::PredictState(float dt) {
   StateVec x_new;
   for (int i = 0; i < StateDim; ++i) {
     x_new(i) = fs_[i](x_,dt);
@@ -98,28 +100,23 @@ typename ExtendedKalmanFilter<T, StateDim, MeasDim>::StateVec ExtendedKalmanFilt
   return x_new;  
 }
 
-template <typename T, int StateDim, int MeasDim>
-void ExtendedKalmanFilter<T, StateDim, MeasDim>::Predict(float dt) {
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(float dt) {
   x_ = PredictState(dt);
-  const auto F = f_jacobian_(x_, dt);
-  // const auto F_numerical = Numerical::CalculateJacobian<T,StateDim,StateDim>(x_, fsj_, dt);
-  // std::cout << "F:\n" << F << std::endl;
-  // std::cout << "F_numerical:\n" << F_numerical << std::endl;
-  // std::cout << "\n\n";
+  const StateMat F = GetStateTransitionJacobian(dt);
   P_ = F * P_ * F.transpose() + Q_;
 }
 
-template <typename T, int StateDim, int MeasDim>
-void ExtendedKalmanFilter<T, StateDim, MeasDim>::Predict(const StateVec& u,
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(const StateVec& u,
                                                          float dt) {
   x_ = PredictState(dt) + B_ * u;
-  const auto F = f_jacobian_(x_, dt);
-  // const auto F_numerical = Numerical::CalculateJacobian<T,StateDim,StateDim>(x_, fsj_, dt);
+  const StateMat F = GetStateTransitionJacobian(dt);
   P_ = F * P_ * F.transpose() + Q_;
 }
 
-template <typename T, int StateDim, int MeasDim>
-void ExtendedKalmanFilter<T, StateDim, MeasDim>::Update(const MeasVec& z) {
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Update(const MeasVec& z) {
   const Eigen::VectorXf y =
       (residual_.has_value()) ? (*residual_)(z, h_(x_)) : z - h_(x_);
   const auto H = h_jacobian_(x_);
@@ -130,8 +127,8 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim>::Update(const MeasVec& z) {
   P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
 }
 
-template <typename T, int StateDim, int MeasDim>
-void ExtendedKalmanFilter<T, StateDim, MeasDim>::NumericalUpdate(const MeasVec& z) {
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::NumericalUpdate(const MeasVec& z) {
   const Eigen::VectorXf y =
       (residual_.has_value()) ? (*residual_)(z, h_(x_)) : z - h_(x_);
   const auto H = h_jacobian_(x_);
@@ -142,18 +139,27 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim>::NumericalUpdate(const MeasVec& 
   P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
 }
 
-template <typename T, int StateDim, int MeasDim>
-void ExtendedKalmanFilter<T, StateDim, MeasDim>::InitState(
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::InitState(
     const StateVec& state, const StateMat& cov) {
   x_ = state;
   P_ = cov;
 }
 
-template <typename T, int StateDim, int MeasDim>
-void ExtendedKalmanFilter<T, StateDim, MeasDim>::InitUncertainty(
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::InitUncertainty(
     const StateMat& process_noise, const MeasMat& measurement_noise) {
   Q_ = process_noise;
   R_ = measurement_noise;
+}
+
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+typename ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateMat ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::GetStateTransitionJacobian(float dt) {
+  if constexpr (JacobianMethod == JacobianCalculationMethod::Manual) {
+    return f_jacobian_(x_, dt);
+  } else {
+    return Numerical::CalculateJacobian<T,StateDim,StateDim>(x_, fsj_, dt);
+  }
 }
 
 }  // namespace KalmanCpp
