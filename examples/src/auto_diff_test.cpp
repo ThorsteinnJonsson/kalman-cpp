@@ -33,7 +33,7 @@ void AutoDiffScalarExample() {
   //
   // f(x,y) = sin(x)^2 + cos(y)^2 + 1
   //
-  std::cout << "f(2,3): " << C.value() << " [from Eigen Autodiff]\n";
+  std::cout << "f(2,3): " << C.value() << " [from Eigen AutoDiffScalar]\n";
 
   //
   // [df/dx df/xy] = [2cos(x)sin(x), -2cos(y)sin(y)]
@@ -55,8 +55,15 @@ struct AutoDiffFunctor {
   };
 
   template <typename T1, typename T2>
+  static T2 Compute(const T1& in) {
+    T2 out;
+    out << pow(sin(in(0, 0)), 2.) + pow(cos(in(1, 0)), 2.) + 1.0f;
+    return out;
+  }
+
+  template <typename T1, typename T2>
   void operator()(const T1& input, T2* output) const {
-    (*output)(0, 0) = pow(sin(input(0, 0)), 2.) + pow(cos(input(1, 0)), 2.) + 1.0f;
+    *output = Compute<T1,T2>(input);
   };
 };
 
@@ -73,7 +80,11 @@ void AutoDiffJacobianExample() {
   std::cout << "f(x,y) = sin(x)^2 + cos(y)^2 + 1" << std::endl;
 
   std::cout << "x:\n" << in.transpose() << "\n";
-  std::cout << "f(x):\n" << out << "\n";
+  std::cout << "f(x):\n"
+            << AutoDiffFunctor<float, 2, 1>::Compute<Eigen::Matrix<float, 2, 1>,
+                                                     Eigen::Matrix<float, 1, 1>>(in)
+            << " [From function]\n";
+  std::cout << "f(x):\n" << out << " [From Eigen AutoDiffJacobian]\n";
   std::cout << "[df/dx df/xy] = [2cos(x)sin(x), -2cos(y)sin(y)] at x:" << std::endl;
   std::cout << jacobian << "\n";
 
