@@ -39,12 +39,12 @@ struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, N_IN, N_
   template <typename InMat, typename OutMat>
   OutMat Compute(const InMat& in) const {
     OutMat out;
-    float dt = 1.0f; // TODO
-    // out << pow(sin(in(0, 0)), 2.) + pow(cos(in(1, 0)), 2.) + 1.0f;
-    out(0) = in(0) + in(1) * dt;
+    out(0) = in(0) + in(1) * dt_;
     out(1) = in(1);
     return out;
   }
+
+  static constexpr float dt_ = 1.0f;
   
 };
 
