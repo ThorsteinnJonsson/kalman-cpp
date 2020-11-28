@@ -34,15 +34,6 @@ class ExtendedKalmanFilter {
   void InitUncertainty(const StateMat& process_noise,
                        const MeasMat& measurement_noise);
 
-  // TODO combine SetStateTransition and JacobianSetStateTransition
-  void SetStateTransition(std::array<std::function<T(const StateVec&, float dt)>, StateDim>&& funcs) {
-    fs_ = funcs;
-  }
-
-  void JacobianSetStateTransition(std::array<std::function<Eigen::AutoDiffScalar<Eigen::Matrix<T, StateDim, 1>>(const std::array<Eigen::AutoDiffScalar<Eigen::Matrix<T, StateDim, 1>>, StateDim>&, float)>,StateDim>&& funcs) {
-    fsj_ = funcs;
-  }
-
   void SetStateTransitionJacobian(
       std::function<StateMat(const StateVec&, float dt)>&& func) {
     f_jacobian_ = func;
@@ -64,15 +55,13 @@ class ExtendedKalmanFilter {
     residual_ = residual_func;
   }
 
-  StateMat GetStateTransitionJacobian(float dt);
-
   void SetPredictor(DerivedPredictor<T,StateDim,StateDim>&& predictor) { predictor_ = predictor; }
 
   const StateVec& State() const { return x_; }
   const StateMat& Uncertainty() const { return P_; }
 
  private:
-  StateVec PredictState(float dt);
+  // StateVec PredictState(float dt);
 
  private:
   StateVec x_ = StateVec::Zero();
@@ -80,9 +69,6 @@ class ExtendedKalmanFilter {
 
   StateMat Q_;
   MeasMat R_;
-
-  std::array<std::function<T(const StateVec&, float dt)>, StateDim> fs_;
-  std::array<std::function<Eigen::AutoDiffScalar<Eigen::Matrix<T, StateDim, 1>>(const std::array<Eigen::AutoDiffScalar<Eigen::Matrix<T, StateDim, 1>>, StateDim>&, float)>,StateDim> fsj_;
 
   std::function<StateMat(const StateVec&, float dt)> f_jacobian_;
 
@@ -96,28 +82,38 @@ class ExtendedKalmanFilter {
   DerivedPredictor<T,StateDim,StateDim> predictor_;
 };
 
-template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
-typename ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateVec ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::PredictState(float dt) {
-  (void)dt; // TODO use in predictor
-  StateVec x_new = predictor_.template Compute<StateVec,StateVec>(x_);
-  return x_new;  
-}
+// template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+// typename ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateVec ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::PredictState(float dt) {
+//   (void)dt; // TODO use in predictor
+//   StateVec x_new = predictor_.template Compute<StateVec,StateVec>(x_);
+//   return x_new;  
+// }
 
 template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
 void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(float dt) {
-  x_ = PredictState(dt);
-  std::cout << "x:\n" << x_ << std::endl;
-  const StateMat F = GetStateTransitionJacobian(dt);
-  P_ = F * P_ * F.transpose() + Q_;
+  if constexpr (JacobianMethod == JacobianCalculationMethod::Manual) {
+    x_ = predictor_.template Compute<StateVec,StateVec>(x_);
+    ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateMat jacobian = f_jacobian_(x_, dt);
+    P_ = jacobian * P_ * jacobian.transpose() + Q_;
+  } else {
+    (void)dt; // TODO use dt
+    Eigen::AutoDiffJacobian<DerivedPredictor<T,StateDim,StateDim>> auto_differ;
+    ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateVec x_new;
+    ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateMat jacobian;
+    auto_differ(x_, &x_new, &jacobian);
+    x_ = x_new;
+    P_ = jacobian * P_ * jacobian.transpose() + Q_;
+
+  }
 }
 
-template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(const StateVec& u,
-                                                         float dt) {
-  x_ = PredictState(dt) + B_ * u;
-  const StateMat F = GetStateTransitionJacobian(dt);
-  P_ = F * P_ * F.transpose() + Q_;
-}
+// template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+// void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(const StateVec& u,
+//                                                          float dt) {
+//   x_ = PredictState(dt) + B_ * u;
+//   const StateMat F = GetStateTransitionJacobian(dt);
+//   P_ = F * P_ * F.transpose() + Q_;
+// }
 
 template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
 void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Update(const MeasVec& z) {
@@ -155,20 +151,6 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::InitUncertainty
     const StateMat& process_noise, const MeasMat& measurement_noise) {
   Q_ = process_noise;
   R_ = measurement_noise;
-}
-
-template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
-typename ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateMat ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::GetStateTransitionJacobian(float dt) {
-  if constexpr (JacobianMethod == JacobianCalculationMethod::Manual) {
-    return f_jacobian_(x_, dt);
-  } else {
-    (void)dt; // TODO use dt
-    Eigen::AutoDiffJacobian<DerivedPredictor<T,StateDim,StateDim>> auto_differ;
-    ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateVec out;
-    ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateMat jacobian;
-    auto_differ(x_, &out, &jacobian);
-    return jacobian;
-  }
 }
 
 }  // namespace KalmanCpp

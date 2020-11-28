@@ -117,17 +117,6 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> SetupFilter(
   kf.InitUncertainty(process_noise, measurement_noise);
 
   // State transition
-  std::array<std::function<T(const Eigen::Matrix<T,StateDim,1>&, float dt)>, StateDim> state_transition = {
-    [](const Eigen::Matrix<T,StateDim,1>& x, float timestep) -> T { return x(0) + timestep * x(1); },
-    [](const Eigen::Matrix<T,StateDim,1>& x, [[maybe_unused]]float timestep) -> T { return x(1); }
-  };
-  kf.SetStateTransition(std::move(state_transition));
-  std::array<std::function<Eigen::AutoDiffScalar<Eigen::Matrix<T, StateDim, 1>>(const std::array<Eigen::AutoDiffScalar<Eigen::Matrix<T, StateDim, 1>>, StateDim>&, float)>,StateDim> jacobian_state_transition = {
-    [](const auto& x, float timestep) {return x[0] + timestep * x[1]; },
-    [](const auto& x, [[maybe_unused]]float timestemp) {return x[1]; }
-  };
-  kf.JacobianSetStateTransition(std::move(jacobian_state_transition));
-
   KalmanCpp::DerivedPredictor<T,StateDim,StateDim> predictor;
   kf.SetPredictor(std::move(predictor));
 
