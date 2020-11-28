@@ -167,7 +167,6 @@ typename ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateMat Ex
     ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateVec out;
     ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::StateMat jacobian;
     auto_differ(x_, &out, &jacobian);
-    std::cout << "out:\n" << out << std::endl;
     return jacobian;
   }
 }
