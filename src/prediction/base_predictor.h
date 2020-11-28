@@ -17,8 +17,8 @@ struct BasePredictor {
   };
 
   template <typename InMat, typename OutMat>
-  OutMat Compute(const InMat& in) {
-    Derived* d = static_cast<Derived*>(this);
+  OutMat Compute(const InMat& in) const {
+    const Derived* d = static_cast<const Derived*>(this);
     // The template keyword below is required to tell the compiler that
     // this is a template. Doing [ OutMat out = d->Compute<InMat,OutMat>(in);  ]
     // results in a compile error. The template keyword tells the compiler that
@@ -37,11 +37,15 @@ template <typename Scalar, int N_IN, int N_OUT>
 struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, N_IN, N_OUT>, Scalar, N_IN, N_OUT> {
 
   template <typename InMat, typename OutMat>
-  OutMat Compute(const InMat& in) {
+  OutMat Compute(const InMat& in) const {
     OutMat out;
-    out << pow(sin(in(0, 0)), 2.) + pow(cos(in(1, 0)), 2.) + 1.0f;
+    float dt = 1.0f; // TODO
+    // out << pow(sin(in(0, 0)), 2.) + pow(cos(in(1, 0)), 2.) + 1.0f;
+    out(0) = in(0) + in(1) * dt;
+    out(1) = in(1);
     return out;
   }
+  
 };
 
 }  // namespace KalmanCpp
