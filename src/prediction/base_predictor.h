@@ -6,10 +6,10 @@
 
 namespace KalmanCpp {
 
-template <typename Derived, typename Scalar, int N_IN, int N_OUT>
+template <typename Derived, typename Scalar, int StateDim>
 struct BasePredictor {
-  typedef Eigen::Matrix<Scalar, N_IN, 1> InputType;
-  typedef Eigen::Matrix<Scalar, N_OUT, 1> ValueType;
+  typedef Eigen::Matrix<Scalar, StateDim, 1> InputType;
+  typedef Eigen::Matrix<Scalar, StateDim, 1> ValueType;
 
   enum {
     InputsAtCompileTime = InputType::RowsAtCompileTime,
@@ -33,8 +33,8 @@ struct BasePredictor {
   };
 };
 
-template <typename Scalar, int N_IN, int N_OUT>
-struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, N_IN, N_OUT>, Scalar, N_IN, N_OUT> {
+template <typename Scalar, int StateDim>
+struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim>, Scalar, StateDim> {
 
   template <typename InMat, typename OutMat>
   OutMat Predict(const InMat& in) const {
@@ -49,6 +49,14 @@ struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, N_IN, N_
     OutMat jacobian = OutMat::Identity();
     jacobian(0, 1) = dt_;
     return jacobian;
+  }
+
+
+  template <typename InMat, typename OutVec, typename OutMat>
+  std::pair<OutVec, OutMat>  GetPrediction([[maybe_unused]]const InMat& in) const {
+    OutVec prediction = Predict<InMat, OutVec>(in);
+    OutMat jacobian = Jacobian<InMat, OutMat>(in);
+    return {prediction, jacobian};
   }
 
   static constexpr float dt_ = 1.0f;

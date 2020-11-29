@@ -117,7 +117,7 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> SetupFilter(
   kf.InitUncertainty(process_noise, measurement_noise);
 
   // State transition
-  KalmanCpp::DerivedPredictor<T,StateDim,StateDim> predictor;
+  KalmanCpp::DerivedPredictor<T,StateDim> predictor;
   kf.SetPredictor(std::move(predictor));
 
   // Measurment function

@@ -4,7 +4,7 @@
 namespace KalmanCpp {
 
 enum struct JacobianCalculationMethod {
-  Manual,
+  Analytical,
   Numerical
 };
 
