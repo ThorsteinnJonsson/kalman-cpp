@@ -120,14 +120,6 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> SetupFilter(
   KalmanCpp::DerivedPredictor<T,StateDim,StateDim> predictor;
   kf.SetPredictor(std::move(predictor));
 
-  auto state_transition_jacobian = [](const Eigen::VectorXf&,
-                                      float timestep) -> Eigen::MatrixXf {
-    Eigen::Matrix2f jacobian = Eigen::Matrix2f::Identity();
-    jacobian(0, 1) = timestep;
-    return jacobian;
-  };
-  kf.SetStateTransitionJacobian(std::move(state_transition_jacobian));
-
   // Measurment function
   auto measurement_func = [](const Eigen::VectorXf& x) -> Eigen::VectorXf {
     Eigen::MatrixXf z(1, 1);

@@ -17,19 +17,19 @@ struct BasePredictor {
   };
 
   template <typename InMat, typename OutMat>
-  OutMat Compute(const InMat& in) const {
+  OutMat Predict(const InMat& in) const {
     const Derived* d = static_cast<const Derived*>(this);
     // The template keyword below is required to tell the compiler that
-    // this is a template. Doing [ OutMat out = d->Compute<InMat,OutMat>(in);  ]
+    // this is a template. Doing [ OutMat out = d->Predict<InMat,OutMat>(in);  ]
     // results in a compile error. The template keyword tells the compiler that
     // this is a function call.
-    OutMat out = d->template Compute<InMat,OutMat>(in);
+    OutMat out = d->template Predict<InMat,OutMat>(in);
     return out;
   }
 
   template <typename InMat, typename OutMat>
   void operator()(const InMat& input, OutMat* output) const {
-    *output = Compute<InMat,OutMat>(input);
+    *output = Predict<InMat,OutMat>(input);
   };
 };
 
@@ -37,11 +37,18 @@ template <typename Scalar, int N_IN, int N_OUT>
 struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, N_IN, N_OUT>, Scalar, N_IN, N_OUT> {
 
   template <typename InMat, typename OutMat>
-  OutMat Compute(const InMat& in) const {
+  OutMat Predict(const InMat& in) const {
     OutMat out;
     out(0) = in(0) + in(1) * dt_;
     out(1) = in(1);
     return out;
+  }
+
+  template <typename InMat, typename OutMat>
+  OutMat Jacobian([[maybe_unused]]const InMat& in) const {
+    OutMat jacobian = OutMat::Identity();
+    jacobian(0, 1) = dt_;
+    return jacobian;
   }
 
   static constexpr float dt_ = 1.0f;
