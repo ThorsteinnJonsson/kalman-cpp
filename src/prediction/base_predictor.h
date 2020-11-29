@@ -56,18 +56,15 @@ struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim
 
   template <typename InMat, typename OutVec, typename OutMat>
   std::pair<OutVec, OutMat>  GetPrediction([[maybe_unused]]const InMat& in) const {
-    if (Method == JacobianCalculationMethod::Analytical) {
-      OutVec prediction = Predict<InMat, OutVec>(in);
-      OutMat jacobian = Jacobian<InMat, OutMat>(in);
-      return {prediction, jacobian};
+    if constexpr (Method == JacobianCalculationMethod::Analytical) {
+      return {Predict<InMat, OutVec>(in), Jacobian<InMat, OutMat>(in)};
     } else {
       Eigen::AutoDiffJacobian<DerivedPredictor<Scalar,StateDim,Method>> auto_differ(*this);
       OutVec prediction;
       OutMat jacobian;
       auto_differ(in, &prediction, &jacobian);
-      return {prediction, jacobian}; // TODO use numerical method
+      return {prediction, jacobian};
     }
-
   }
 
   static constexpr float dt_ = 1.0f;
