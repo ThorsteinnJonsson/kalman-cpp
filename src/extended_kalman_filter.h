@@ -50,7 +50,7 @@ class ExtendedKalmanFilter {
     residual_ = residual_func;
   }
 
-  void SetPredictor(DerivedPredictor<T,StateDim>&& predictor) { predictor_ = predictor; }
+  void SetPredictor(DerivedPredictor<T,StateDim,JacobianMethod>&& predictor) { predictor_ = predictor; }
 
   const StateVec& State() const { return x_; }
   const StateMat& Uncertainty() const { return P_; }
@@ -70,27 +70,17 @@ class ExtendedKalmanFilter {
 
   StateMat B_;  // Control model
 
-  DerivedPredictor<T,StateDim> predictor_;
+  DerivedPredictor<T,StateDim,JacobianMethod> predictor_;
 };
 
 template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
 void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(float dt) {
 
-  // x_, P_ = predictor_.Predict(dt); // TODO I want to simplify the syntax to something like this
-
   (void)dt; // TODO use dt instead of having a constant dt
-  if constexpr (JacobianMethod == JacobianCalculationMethod::Analytical) {
-    auto [x_new, jacobian] = predictor_.template GetPrediction<StateVec,StateVec,StateMat>(x_);
-    x_ = x_new;
-    P_ = jacobian * P_ * jacobian.transpose() + Q_;
-  } else {
-    Eigen::AutoDiffJacobian<DerivedPredictor<T,StateDim>> auto_differ(predictor_);
-    StateVec x_new;
-    StateMat jacobian;
-    auto_differ(x_, &x_new, &jacobian);
-    x_ = x_new;
-    P_ = jacobian * P_ * jacobian.transpose() + Q_;
-  }
+
+  auto [x_new, jacobian] = predictor_.template GetPrediction<StateVec,StateVec,StateMat>(x_);
+  x_ = x_new;
+  P_ = jacobian * P_ * jacobian.transpose() + Q_;
 }
 
 // template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>

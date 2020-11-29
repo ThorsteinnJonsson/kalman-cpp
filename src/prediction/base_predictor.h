@@ -4,6 +4,8 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/unsupported/Eigen/AutoDiff>
 
+#include "filter_utils.h"
+
 namespace KalmanCpp {
 
 template <typename Derived, typename Scalar, int StateDim>
@@ -33,7 +35,7 @@ struct BasePredictor {
   };
 };
 
-template <typename Scalar, int StateDim>
+template <typename Scalar, int StateDim, JacobianCalculationMethod Method=JacobianCalculationMethod::Numerical>
 struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim>, Scalar, StateDim> {
 
   template <typename InMat, typename OutMat>
@@ -54,9 +56,18 @@ struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim
 
   template <typename InMat, typename OutVec, typename OutMat>
   std::pair<OutVec, OutMat>  GetPrediction([[maybe_unused]]const InMat& in) const {
-    OutVec prediction = Predict<InMat, OutVec>(in);
-    OutMat jacobian = Jacobian<InMat, OutMat>(in);
-    return {prediction, jacobian};
+    if (Method == JacobianCalculationMethod::Analytical) {
+      OutVec prediction = Predict<InMat, OutVec>(in);
+      OutMat jacobian = Jacobian<InMat, OutMat>(in);
+      return {prediction, jacobian};
+    } else {
+      Eigen::AutoDiffJacobian<DerivedPredictor<Scalar,StateDim,Method>> auto_differ(*this);
+      OutVec prediction;
+      OutMat jacobian;
+      auto_differ(in, &prediction, &jacobian);
+      return {prediction, jacobian}; // TODO use numerical method
+    }
+
   }
 
   static constexpr float dt_ = 1.0f;
