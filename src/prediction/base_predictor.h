@@ -32,6 +32,8 @@ class BasePredictor {
 
   template <typename InMat, typename OutMat>
   OutMat GetJacobian(const InMat& in) const {
+    // TODO this gives a runtime error when the GetJacobian method is not defined in the 
+    // derived class. Need to change it to compile-time error
     const Derived* d = static_cast<const Derived*>(this);
     OutMat out = d->template GetJacobian<InMat,OutMat>(in);
     return out;
@@ -65,7 +67,6 @@ template <typename Scalar, int StateDim, JacobianCalculationMethod Method>
 class Predictor : public BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim, Method> {
   friend class BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim, Method>;
  protected:
-
   float Timestep() const { return BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim, Method>::dt_; }
 
   template <typename InMat, typename OutMat>
