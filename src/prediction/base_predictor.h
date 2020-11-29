@@ -37,9 +37,9 @@ class BasePredictor {
   };
 };
 
-template <typename Scalar, int StateDim, JacobianCalculationMethod Method=JacobianCalculationMethod::Numerical>
-class Predictor : public BasePredictor<Predictor<Scalar, StateDim>, Scalar, StateDim> {
-  friend class BasePredictor<Predictor<Scalar, StateDim>, Scalar, StateDim>;
+template <typename Scalar, int StateDim, JacobianCalculationMethod Method>
+class Predictor : public BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim> {
+  friend class BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim>;
  protected:
   template <typename InMat, typename OutMat>
   OutMat GetPrediction(const InMat& in) const {
