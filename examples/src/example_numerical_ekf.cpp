@@ -146,7 +146,7 @@ void RunExample() {
   constexpr float filter_meas_var = 10.0f;
   constexpr float dt = 1.0f;  // Assume constant timestep
   auto kf =
-      SetupFilter<float, state_dim, meas_dim, KalmanCpp::JacobianCalculationMethod::Numerical>(filter_process_var, filter_meas_var, dt);
+      SetupFilter<float, state_dim, meas_dim, KalmanCpp::JacobianCalculationMethod::Analytical>(filter_process_var, filter_meas_var, dt);
 
   // Get measurements
   constexpr size_t num_meas = 50;
