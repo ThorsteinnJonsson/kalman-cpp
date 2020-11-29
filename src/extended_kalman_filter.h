@@ -83,13 +83,15 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(float d
   P_ = jacobian * P_ * jacobian.transpose() + Q_;
 }
 
-// template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
-// void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(const StateVec& u,
-//                                                          float dt) {
-//   x_ = PredictState(dt) + B_ * u;
-//   const StateMat F = GetStateTransitionJacobian(dt);
-//   P_ = F * P_ * F.transpose() + Q_;
-// }
+template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(const StateVec& u, float dt) {
+
+  (void)dt; // TODO use dt instead of having a constant dt
+
+  auto [x_new, jacobian] = predictor_.template Predict<StateVec,StateVec,StateMat>(x_);
+  x_ = x_new + B_ * u;
+  P_ = jacobian * P_ * jacobian.transpose() + Q_;
+}
 
 template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
 void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Update(const MeasVec& z) {

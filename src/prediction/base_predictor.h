@@ -9,7 +9,8 @@
 namespace KalmanCpp {
 
 template <typename Derived, typename Scalar, int StateDim>
-struct BasePredictor {
+class BasePredictor {
+ public:
   typedef Eigen::Matrix<Scalar, StateDim, 1> InputType;
   typedef Eigen::Matrix<Scalar, StateDim, 1> ValueType;
 
@@ -17,7 +18,7 @@ struct BasePredictor {
     InputsAtCompileTime = InputType::RowsAtCompileTime,
     ValuesAtCompileTime = ValueType::RowsAtCompileTime
   };
-
+ protected:
   template <typename InMat, typename OutMat>
   OutMat GetPrediction(const InMat& in) const {
     const Derived* d = static_cast<const Derived*>(this);
@@ -28,7 +29,8 @@ struct BasePredictor {
     OutMat out = d->template GetPrediction<InMat,OutMat>(in);
     return out;
   }
-
+  
+ public:
   template <typename InMat, typename OutMat>
   void operator()(const InMat& input, OutMat* output) const {
     *output = GetPrediction<InMat,OutMat>(input);
@@ -36,8 +38,9 @@ struct BasePredictor {
 };
 
 template <typename Scalar, int StateDim, JacobianCalculationMethod Method=JacobianCalculationMethod::Numerical>
-struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim>, Scalar, StateDim> {
-
+class DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim>, Scalar, StateDim> {
+  friend class BasePredictor<DerivedPredictor<Scalar, StateDim>, Scalar, StateDim>;
+ protected:
   template <typename InMat, typename OutMat>
   OutMat GetPrediction(const InMat& in) const {
     OutMat out;
@@ -53,7 +56,7 @@ struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim
     return jacobian;
   }
 
-
+ public:
   template <typename InMat, typename OutVec, typename OutMat>
   std::pair<OutVec, OutMat>  Predict([[maybe_unused]]const InMat& in) const {
     if constexpr (Method == JacobianCalculationMethod::Analytical) {
