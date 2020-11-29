@@ -5,6 +5,7 @@
 #include <eigen3/Eigen/LU>
 #include <functional>
 #include <optional>
+#include <memory>
 
 #include "filter_utils.h"
 #include "numerical/jacobian.h"
@@ -50,7 +51,7 @@ class ExtendedKalmanFilter {
     residual_ = residual_func;
   }
 
-  void SetPredictor(DerivedPredictor<T,StateDim,JacobianMethod>&& predictor) { predictor_ = predictor; }
+  void SetPredictor(std::unique_ptr<Predictor<T,StateDim,JacobianMethod>>&& predictor) { predictor_ = std::move(predictor); }
 
   const StateVec& State() const { return x_; }
   const StateMat& Uncertainty() const { return P_; }
@@ -70,12 +71,12 @@ class ExtendedKalmanFilter {
 
   StateMat B_;  // Control model
 
-  DerivedPredictor<T,StateDim,JacobianMethod> predictor_;
+  std::unique_ptr<Predictor<T,StateDim,JacobianMethod>> predictor_;
 };
 
 template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
 void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(float dt) {
-  auto [x_new, jacobian] = predictor_.template Predict<StateVec,StateVec,StateMat>(x_, dt);
+  auto [x_new, jacobian] = predictor_->template Predict<StateVec,StateVec,StateMat>(x_, dt);
   x_ = x_new;
   P_ = jacobian * P_ * jacobian.transpose() + Q_;
 }

@@ -117,7 +117,7 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, JacobianMethod> SetupF
   kf.InitUncertainty(process_noise, measurement_noise);
 
   // State transition
-  KalmanCpp::DerivedPredictor<T,StateDim,JacobianMethod> predictor;
+  std::unique_ptr<KalmanCpp::Predictor<T,StateDim,JacobianMethod>> predictor = std::make_unique<KalmanCpp::Predictor<T,StateDim,JacobianMethod>>();
   kf.SetPredictor(std::move(predictor));
 
   // Measurment function

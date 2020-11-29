@@ -38,8 +38,8 @@ class BasePredictor {
 };
 
 template <typename Scalar, int StateDim, JacobianCalculationMethod Method=JacobianCalculationMethod::Numerical>
-class DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim>, Scalar, StateDim> {
-  friend class BasePredictor<DerivedPredictor<Scalar, StateDim>, Scalar, StateDim>;
+class Predictor : public BasePredictor<Predictor<Scalar, StateDim>, Scalar, StateDim> {
+  friend class BasePredictor<Predictor<Scalar, StateDim>, Scalar, StateDim>;
  protected:
   template <typename InMat, typename OutMat>
   OutMat GetPrediction(const InMat& in) const {
@@ -63,14 +63,14 @@ class DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim>
     if constexpr (Method == JacobianCalculationMethod::Analytical) {
       return {GetPrediction<InMat, OutVec>(in), GetJacobian<InMat, OutMat>(in)};
     } else {
-      Eigen::AutoDiffJacobian<DerivedPredictor<Scalar,StateDim,Method>> auto_differ(*this);
+      Eigen::AutoDiffJacobian<Predictor<Scalar,StateDim,Method>> auto_differ(*this);
       OutVec prediction;
       OutMat jacobian;
       auto_differ(in, &prediction, &jacobian);
       return {prediction, jacobian};
     }
   }
-  
+
  private:
   mutable float dt_ = 0.0f;
   
