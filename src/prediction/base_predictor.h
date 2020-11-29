@@ -29,7 +29,7 @@ class BasePredictor {
     OutMat out = d->template GetPrediction<InMat,OutMat>(in);
     return out;
   }
-  
+
  public:
   template <typename InMat, typename OutMat>
   void operator()(const InMat& input, OutMat* output) const {
@@ -58,7 +58,8 @@ class DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim>
 
  public:
   template <typename InMat, typename OutVec, typename OutMat>
-  std::pair<OutVec, OutMat>  Predict([[maybe_unused]]const InMat& in) const {
+  std::pair<OutVec, OutMat>  Predict([[maybe_unused]]const InMat& in, float dt) const {
+    dt_ = dt;
     if constexpr (Method == JacobianCalculationMethod::Analytical) {
       return {GetPrediction<InMat, OutVec>(in), GetJacobian<InMat, OutMat>(in)};
     } else {
@@ -69,8 +70,9 @@ class DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim>
       return {prediction, jacobian};
     }
   }
-
-  static constexpr float dt_ = 1.0f;
+  
+ private:
+  mutable float dt_ = 0.0f;
   
 };
 
