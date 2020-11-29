@@ -19,19 +19,19 @@ struct BasePredictor {
   };
 
   template <typename InMat, typename OutMat>
-  OutMat Predict(const InMat& in) const {
+  OutMat GetPrediction(const InMat& in) const {
     const Derived* d = static_cast<const Derived*>(this);
     // The template keyword below is required to tell the compiler that
-    // this is a template. Doing [ OutMat out = d->Predict<InMat,OutMat>(in);  ]
+    // this is a template. Doing [ OutMat out = d->GetPrediction<InMat,OutMat>(in);  ]
     // results in a compile error. The template keyword tells the compiler that
     // this is a function call.
-    OutMat out = d->template Predict<InMat,OutMat>(in);
+    OutMat out = d->template GetPrediction<InMat,OutMat>(in);
     return out;
   }
 
   template <typename InMat, typename OutMat>
   void operator()(const InMat& input, OutMat* output) const {
-    *output = Predict<InMat,OutMat>(input);
+    *output = GetPrediction<InMat,OutMat>(input);
   };
 };
 
@@ -39,7 +39,7 @@ template <typename Scalar, int StateDim, JacobianCalculationMethod Method=Jacobi
 struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim>, Scalar, StateDim> {
 
   template <typename InMat, typename OutMat>
-  OutMat Predict(const InMat& in) const {
+  OutMat GetPrediction(const InMat& in) const {
     OutMat out;
     out(0) = in(0) + in(1) * dt_;
     out(1) = in(1);
@@ -47,7 +47,7 @@ struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim
   }
 
   template <typename InMat, typename OutMat>
-  OutMat Jacobian([[maybe_unused]]const InMat& in) const {
+  OutMat GetJacobian([[maybe_unused]]const InMat& in) const {
     OutMat jacobian = OutMat::Identity();
     jacobian(0, 1) = dt_;
     return jacobian;
@@ -55,9 +55,9 @@ struct DerivedPredictor : public BasePredictor<DerivedPredictor<Scalar, StateDim
 
 
   template <typename InMat, typename OutVec, typename OutMat>
-  std::pair<OutVec, OutMat>  GetPrediction([[maybe_unused]]const InMat& in) const {
+  std::pair<OutVec, OutMat>  Predict([[maybe_unused]]const InMat& in) const {
     if constexpr (Method == JacobianCalculationMethod::Analytical) {
-      return {Predict<InMat, OutVec>(in), Jacobian<InMat, OutMat>(in)};
+      return {GetPrediction<InMat, OutVec>(in), GetJacobian<InMat, OutMat>(in)};
     } else {
       Eigen::AutoDiffJacobian<DerivedPredictor<Scalar,StateDim,Method>> auto_differ(*this);
       OutVec prediction;

@@ -78,7 +78,7 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(float d
 
   (void)dt; // TODO use dt instead of having a constant dt
 
-  auto [x_new, jacobian] = predictor_.template GetPrediction<StateVec,StateVec,StateMat>(x_);
+  auto [x_new, jacobian] = predictor_.template Predict<StateVec,StateVec,StateMat>(x_);
   x_ = x_new;
   P_ = jacobian * P_ * jacobian.transpose() + Q_;
 }
