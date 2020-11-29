@@ -82,9 +82,8 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(float d
 
 template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
 void ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod>::Predict(const StateVec& u, float dt) {
-  auto [x_new, jacobian] = predictor_.template Predict<StateVec,StateVec,StateMat>(x_, dt);
-  x_ = x_new + B_ * u;
-  P_ = jacobian * P_ * jacobian.transpose() + Q_;
+  Predict(dt);
+  x_ += B_ * u;
 }
 
 template <typename T, int StateDim, int MeasDim, JacobianCalculationMethod JacobianMethod>
