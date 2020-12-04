@@ -10,6 +10,25 @@
 
 #include <matplot/matplot.h>
 
+class MyPredictor : public KalmanCpp::Predictor<MyPredictor, float, 2, KalmanCpp::JacobianCalculationMethod::Numerical> {
+ public: 
+  template <typename InMat, typename OutMat>
+  OutMat GetPrediction(const InMat& in) const {
+    OutMat out;
+    out(0) = in(0) + in(1) * this->Timestep();
+    out(1) = in(1);
+    return out;
+  }
+
+  template <typename InMat, typename OutMat>
+  OutMat GetJacobian([[maybe_unused]]const InMat& in) const {
+    OutMat jacobian = OutMat::Identity();
+    jacobian(0, 1) = this->Timestep();
+    return jacobian;
+  }
+};
+
+
 struct Measurement {
   float ground_truth;
   float value;
@@ -96,10 +115,10 @@ void PlotResult(const std::vector<Measurement>& measurements,
   matplot::show();
 }
 
-template <typename T, int StateDim, int MeasDim, KalmanCpp::JacobianCalculationMethod JacobianMethod >
-KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, JacobianMethod> SetupFilter(
+template <typename T, int StateDim, int MeasDim, typename TPredictor >
+KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor> SetupFilter(
     float process_var, float meas_var, float dt) {
-  KalmanCpp::ExtendedKalmanFilter<T, StateDim, MeasDim, JacobianMethod> kf;
+  KalmanCpp::ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor> kf;
 
   Eigen::Vector2f init_state =
       Eigen::Vector2f::Zero();  // Position and velocity
@@ -117,7 +136,9 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, JacobianMethod> SetupF
   kf.InitUncertainty(process_noise, measurement_noise);
 
   // State transition
-  std::unique_ptr<KalmanCpp::Predictor<T,StateDim,JacobianMethod>> predictor = std::make_unique<KalmanCpp::Predictor<T,StateDim,JacobianMethod>>();
+  // std::unique_ptr<KalmanCpp::Predictor<T,StateDim,JacobianMethod>> predictor = std::make_unique<KalmanCpp::Predictor<T,StateDim,JacobianMethod>>();
+  std::unique_ptr<MyPredictor> predictor = std::make_unique<MyPredictor>();
+  // MyPredictor
   kf.SetPredictor(std::move(predictor));
 
   // Measurment function
@@ -146,7 +167,7 @@ void RunExample() {
   constexpr float filter_meas_var = 10.0f;
   constexpr float dt = 1.0f;  // Assume constant timestep
   auto kf =
-      SetupFilter<float, state_dim, meas_dim, KalmanCpp::JacobianCalculationMethod::Analytical>(filter_process_var, filter_meas_var, dt);
+      SetupFilter<float, state_dim, meas_dim, MyPredictor>(filter_process_var, filter_meas_var, dt);
 
   // Get measurements
   constexpr size_t num_meas = 50;

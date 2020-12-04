@@ -39,8 +39,6 @@ class BasePredictor {
     return out;
   }
 
-  float Timestep() const { return dt_; }
-
  public:
   template <typename InMat, typename OutVec, typename OutMat>
   std::pair<OutVec, OutMat>  Predict([[maybe_unused]]const InMat& in, float dt) const {
@@ -65,26 +63,25 @@ class BasePredictor {
   mutable float dt_ = 0.0f;
 };
 
-template <typename Scalar, int StateDim, JacobianCalculationMethod Method>
-class Predictor : public BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim, Method> {
-  friend class BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim, Method>;
+template <typename Derived, typename Scalar, int StateDim, JacobianCalculationMethod Method>
+class Predictor : public BasePredictor<Predictor<Derived, Scalar, StateDim,Method>, Scalar, StateDim, Method> {
+  friend class BasePredictor<Predictor<Derived, Scalar, StateDim, Method>, Scalar, StateDim, Method>;
  protected:
+  float Timestep() const {return this->dt_; }
 
   template <typename InMat, typename OutMat>
   OutMat GetPrediction(const InMat& in) const {
-    OutMat out;
-    out(0) = in(0) + in(1) * this->Timestep();
-    out(1) = in(1);
+    const Derived* d = static_cast<const Derived*>(this);
+    OutMat out = d->template GetPrediction<InMat,OutMat>(in);
     return out;
   }
 
   template <typename InMat, typename OutMat>
   OutMat GetJacobian([[maybe_unused]]const InMat& in) const {
-    OutMat jacobian = OutMat::Identity();
-    jacobian(0, 1) = this->Timestep();
-    return jacobian;
+    const Derived* d = static_cast<const Derived*>(this);
+    OutMat out = d->template GetJacobian<InMat,OutMat>(in);
+    return out;
   }
-
 };
 
 }  // namespace KalmanCpp
