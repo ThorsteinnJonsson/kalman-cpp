@@ -10,8 +10,7 @@
 
 #include <matplot/matplot.h>
 
-class MyPredictor : public KalmanCpp::Predictor<MyPredictor, float, 2, KalmanCpp::JacobianCalculationMethod::Numerical> {
- public: 
+struct MyPredictor : public KalmanCpp::Predictor<MyPredictor, float, 2, KalmanCpp::JacobianCalculationMethod::Numerical> {
   template <typename InMat, typename OutMat>
   OutMat GetPrediction(const InMat& in) const {
     OutMat out;
