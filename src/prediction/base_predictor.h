@@ -39,6 +39,8 @@ class BasePredictor {
     return out;
   }
 
+  float Timestep() const { return dt_; }
+
  public:
   template <typename InMat, typename OutVec, typename OutMat>
   std::pair<OutVec, OutMat>  Predict([[maybe_unused]]const InMat& in, float dt) const {
@@ -67,12 +69,11 @@ template <typename Scalar, int StateDim, JacobianCalculationMethod Method>
 class Predictor : public BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim, Method> {
   friend class BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim, Method>;
  protected:
-  float Timestep() const { return BasePredictor<Predictor<Scalar, StateDim,Method>, Scalar, StateDim, Method>::dt_; }
 
   template <typename InMat, typename OutMat>
   OutMat GetPrediction(const InMat& in) const {
     OutMat out;
-    out(0) = in(0) + in(1) * Timestep();
+    out(0) = in(0) + in(1) * this->Timestep();
     out(1) = in(1);
     return out;
   }
@@ -80,7 +81,7 @@ class Predictor : public BasePredictor<Predictor<Scalar, StateDim,Method>, Scala
   template <typename InMat, typename OutMat>
   OutMat GetJacobian([[maybe_unused]]const InMat& in) const {
     OutMat jacobian = OutMat::Identity();
-    jacobian(0, 1) = Timestep();
+    jacobian(0, 1) = this->Timestep();
     return jacobian;
   }
 
