@@ -8,7 +8,6 @@
 #include <memory>
 
 #include "filter_utils.h"
-#include "numerical/jacobian.h"
 #include "prediction/base_predictor.h"
 
 namespace KalmanCpp {
