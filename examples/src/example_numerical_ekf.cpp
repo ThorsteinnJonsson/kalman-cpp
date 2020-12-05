@@ -12,19 +12,17 @@
 
 struct MyPredictor : public KalmanCpp::Predictor<MyPredictor, float, 2, KalmanCpp::JacobianCalculationMethod::Numerical> {
   template <typename InMat, typename OutMat>
-  OutMat GetPrediction(const InMat& in) const {
-    OutMat out;
+  void GetPrediction(const InMat& in, OutMat& out) const {
     out(0) = in(0) + in(1) * this->Timestep();
     out(1) = in(1);
-    return out;
   }
 
   template <typename InMat, typename OutMat>
-  OutMat GetJacobian([[maybe_unused]]const InMat& in) const {
-    OutMat jacobian = OutMat::Identity();
+  void GetJacobian([[maybe_unused]]const InMat& in, OutMat& jacobian) const {
+    jacobian = OutMat::Identity();
     jacobian(0, 1) = this->Timestep();
-    return jacobian;
   }
+
 };
 
 
