@@ -15,9 +15,9 @@ template <typename Derived, typename Scalar, int StateDim, JacobianCalculationMe
 class Predictor {
  private:
   static constexpr void CompileTimeTypeValidation() {
-    static_assert(has_GetPrediction<Derived>::value, "Derived predictor does not have a GetPrediction function defined!");
+    static_assert(has_get_prediction<Derived>::value, "Derived predictor does not have a GetPrediction function defined!");
     if constexpr (Method == JacobianCalculationMethod::Analytical) {
-      static_assert(has_GetJacobian<Derived>::value, "Derived predictor does not have a GetJacobian function defined!");
+      static_assert(has_get_jacobian<Derived>::value, "Derived predictor does not have a GetJacobian function defined!");
     }
   }
  protected:
