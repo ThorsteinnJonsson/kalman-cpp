@@ -12,7 +12,7 @@
 namespace KalmanCpp {
 
 template <typename Derived, typename Scalar, int StateDim, JacobianCalculationMethod Method>
-class Predictor {
+class BasePredictor {
  private:
   static constexpr void CompileTimeTypeValidation() {
     static_assert(has_get_prediction<Derived>::value, "Derived predictor does not have a GetPrediction function defined!");
@@ -21,7 +21,7 @@ class Predictor {
     }
   }
  protected:
-  Predictor() noexcept {CompileTimeTypeValidation();};
+  BasePredictor() noexcept {CompileTimeTypeValidation();};
  public:
   typedef Eigen::Matrix<Scalar, StateDim, 1> InputType;
   typedef Eigen::Matrix<Scalar, StateDim, 1> ValueType;
@@ -56,7 +56,7 @@ class Predictor {
       GetJacobian<InMat, OutMat>(in, jacobian);
       return {prediction, jacobian};
     } else {
-      Eigen::AutoDiffJacobian<Predictor<Derived,Scalar,StateDim,Method>> auto_differ(*this);
+      Eigen::AutoDiffJacobian<BasePredictor<Derived,Scalar,StateDim,Method>> auto_differ(*this);
       OutVec prediction;
       OutMat jacobian;
       auto_differ(in, &prediction, &jacobian);

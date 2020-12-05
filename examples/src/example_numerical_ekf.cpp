@@ -10,7 +10,7 @@
 
 #include <matplot/matplot.h>
 
-struct MyPredictor : public KalmanCpp::Predictor<MyPredictor, float, 2, KalmanCpp::JacobianCalculationMethod::Numerical> {
+struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, KalmanCpp::JacobianCalculationMethod::Numerical> {
   template <typename InMat, typename OutMat>
   void GetPrediction(const InMat& in, OutMat& out) const {
     out(0) = in(0) + in(1) * this->Timestep();
