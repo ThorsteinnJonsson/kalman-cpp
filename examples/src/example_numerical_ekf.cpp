@@ -10,21 +10,6 @@
 
 #include <matplot/matplot.h>
 
-struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, KalmanCpp::JacobianCalculationMethod::Numerical> {
-  template <typename InMat, typename OutMat>
-  void GetPrediction(const InMat& in, OutMat& out) const {
-    out(0) = in(0) + in(1) * this->Timestep();
-    out(1) = in(1);
-  }
-
-  template <typename InMat, typename OutMat>
-  void GetJacobian([[maybe_unused]]const InMat& in, OutMat& jacobian) const {
-    jacobian = OutMat::Identity();
-    jacobian(0, 1) = this->Timestep();
-  }
-
-};
-
 
 struct Measurement {
   float ground_truth;
@@ -112,6 +97,26 @@ void PlotResult(const std::vector<Measurement>& measurements,
   matplot::show();
 }
 
+
+// Define a predictor for the EKF. GetPrediction always has to be defined. GetJacobian only has to be defined if
+// the Jacobian method is set to "analytical".
+struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, KalmanCpp::JacobianMethod::Numerical> {
+  
+  template <typename InMat, typename OutMat>
+  void GetPrediction(const InMat& in, OutMat& out) const {
+    out(0) = in(0) + in(1) * this->Timestep();
+    out(1) = in(1);
+  }
+
+  template <typename InMat, typename OutMat>
+  void GetJacobian([[maybe_unused]]const InMat& in, OutMat& jacobian) const {
+    jacobian = OutMat::Identity();
+    jacobian(0, 1) = this->Timestep();
+  }
+
+};
+
+
 template <typename T, int StateDim, int MeasDim, typename TPredictor >
 KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor> SetupFilter(
     float process_var, float meas_var, float dt) {
@@ -133,9 +138,7 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor> SetupFilte
   kf.InitUncertainty(process_noise, measurement_noise);
 
   // State transition
-  // std::unique_ptr<KalmanCpp::Predictor<T,StateDim,JacobianMethod>> predictor = std::make_unique<KalmanCpp::Predictor<T,StateDim,JacobianMethod>>();
   std::unique_ptr<MyPredictor> predictor = std::make_unique<MyPredictor>();
-  // MyPredictor
   kf.SetPredictor(std::move(predictor));
 
   // Measurment function
@@ -155,6 +158,7 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor> SetupFilte
 
   return kf;
 }
+
 
 void RunExample() {
   // Set up Kalman filter

@@ -11,12 +11,12 @@
 
 namespace KalmanCpp {
 
-template <typename Derived, typename Scalar, int StateDim, JacobianCalculationMethod Method>
+template <typename Derived, typename Scalar, int StateDim, JacobianMethod Method>
 class BasePredictor {
  private:
   static constexpr void CompileTimeTypeValidation() {
     static_assert(has_get_prediction<Derived>::value, "Derived predictor does not have a GetPrediction function defined!");
-    if constexpr (Method == JacobianCalculationMethod::Analytical) {
+    if constexpr (Method == JacobianMethod::Analytical) {
       static_assert(has_get_jacobian<Derived>::value, "Derived predictor does not have a GetJacobian function defined!");
     }
   }
@@ -49,7 +49,7 @@ class BasePredictor {
   template <typename InMat, typename OutVec, typename OutMat>
   std::pair<OutVec, OutMat>  Predict([[maybe_unused]]const InMat& in, float dt) const {
     dt_ = dt;
-    if constexpr (Method == JacobianCalculationMethod::Analytical) {
+    if constexpr (Method == JacobianMethod::Analytical) {
       OutVec prediction;
       GetPrediction<InMat, OutVec>(in, prediction);
       OutMat jacobian;
