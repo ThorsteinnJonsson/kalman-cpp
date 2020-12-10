@@ -6,7 +6,7 @@
 #include <eigen3/unsupported/Eigen/AutoDiff>
 
 #include "filter_utils.h"
-#include "prediction/predictor_type_traits.h"
+#include "predict/predictor_type_traits.h"
 
 
 namespace KalmanCpp {

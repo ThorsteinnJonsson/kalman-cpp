@@ -11,5 +11,5 @@ set(headers
   src/kalman_filter.h
   src/extended_kalman_filter.h
   src/filter_utils.h
-  src/prediction/base_predictor.h
+  src/predict/base_predictor.h
 )

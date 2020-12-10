@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "filter_utils.h"
-#include "prediction/base_predictor.h"
+#include "predict/base_predictor.h"
 
 namespace KalmanCpp {
 
