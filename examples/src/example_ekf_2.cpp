@@ -94,9 +94,9 @@ class BallSim {
 };
 
 
-template <int StateDim, int MeasDim>
-KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> SetupFilter() {
-  KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> kf;
+template <typename T, int StateDim, int MeasDim>
+KalmanCpp::ExtendedKalmanFilter<T, StateDim, MeasDim> SetupFilter() {
+  KalmanCpp::ExtendedKalmanFilter<T, StateDim, MeasDim> kf;
 
   // Initial values
   const float initial_velocity = 50.0f;
@@ -114,16 +114,31 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> SetupFilter() {
   Eigen::Matrix2f measurement_noise = Eigen::Matrix2f::Identity() * 0.5f;
   kf.InitUncertainty(process_noise, measurement_noise);
 
-  // State transition
-  auto state_transition = [](const Eigen::VectorXf& x, float timestep) -> Eigen::VectorXf {
-    Eigen::Vector4f x_new;
-    x_new(0) = x(0) + timestep * x(1);
-    x_new(1) = x(1);
-    x_new(2) = x(2) + timestep * x(3);
-    x_new(3) = x(3);
-    return x_new; 
+  // // State transition
+  // auto state_transition = [](const Eigen::VectorXf& x, float timestep) -> Eigen::VectorXf {
+  //   Eigen::Vector4f x_new;
+  //   x_new(0) = x(0) + timestep * x(1);
+  //   x_new(1) = x(1);
+  //   x_new(2) = x(2) + timestep * x(3);
+  //   x_new(3) = x(3);
+  //   return x_new; 
+  // };
+  // kf.SetStateTransitionFunction(std::move(state_transition));
+
+  std::array<std::function<T(const Eigen::Matrix<T,StateDim,1>&, float dt)>, StateDim> state_transition = {
+    [](const Eigen::Matrix<T,StateDim,1>& x, float timestep) -> T { return x(0) + timestep * x(1); },
+    [](const Eigen::Matrix<T,StateDim,1>& x, [[maybe_unused]]float timestep) -> T { return x(1); },
+    [](const Eigen::Matrix<T,StateDim,1>& x, float timestep) -> T { return x(2) + timestep * x(3); },
+    [](const Eigen::Matrix<T,StateDim,1>& x, [[maybe_unused]]float timestep) -> T { return x(3); }
   };
-  kf.SetStateTransitionFunction(std::move(state_transition));
+  kf.SetStateTransition(std::move(state_transition));
+  std::array<std::function<Eigen::AutoDiffScalar<Eigen::Matrix<T, StateDim, 1>>(const std::array<Eigen::AutoDiffScalar<Eigen::Matrix<T, StateDim, 1>>, StateDim>&, float)>,StateDim> jacobian_state_transition = {
+    [](const auto& x, float timestep) {return x[0] + timestep * x[1]; },
+    [](const auto& x, [[maybe_unused]]float timestemp) {return x[1]; },
+    [](const auto& x, float timestep) {return x[2] + timestep * x[3]; },
+    [](const auto& x, [[maybe_unused]]float timestemp) {return x[3]; }
+  };
+  kf.JacobianSetStateTransition(std::move(jacobian_state_transition));
 
   auto state_transition_jacobian = [](const Eigen::VectorXf&, float timestep) -> Eigen::MatrixXf {
     Eigen::Matrix4f jacobian = Eigen::Matrix4f::Identity();
@@ -168,7 +183,7 @@ void RunExample() {
   // Set up Kalman filter
   constexpr size_t state_dim = 4;
   constexpr size_t meas_dim = 2;
-  auto kf = SetupFilter<state_dim, meas_dim>();
+  auto kf = SetupFilter<float, state_dim, meas_dim>();
 
   // Set up simulation
   const float gt_initial_speed = 50.0f;
