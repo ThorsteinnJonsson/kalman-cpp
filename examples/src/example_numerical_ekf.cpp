@@ -116,7 +116,9 @@ struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, Kalm
 
 };
 
-struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanCpp::JacobianMethod::Numerical> {
+// Define a updater for the EKF. GetMeasurement always has to be defined. GetJacobian only has to be defined if
+// the Jacobian method is set to "analytical".
+struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanCpp::JacobianMethod::Analytical> {
   
   template <typename InMat, typename OutMat>
   void GetMeasurement(const InMat& in, OutMat& out) const {
