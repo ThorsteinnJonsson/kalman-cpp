@@ -1,5 +1,5 @@
-#ifndef KALMAN_CPP_PREDICTOR_TYPE_TRAITS_H
-#define KALMAN_CPP_PREDICTOR_TYPE_TRAITS_H
+#ifndef KALMAN_CPP_TYPE_TRAITS_H
+#define KALMAN_CPP_TYPE_TRAITS_H
 
 #include <type_traits>
 
@@ -21,6 +21,24 @@ struct has_get_prediction {
       std::is_same<std::true_type, type>::value;
 };
 
+
+template <typename T>
+struct has_get_measurement {
+  struct dummy {};
+
+  template <typename C, typename Dummy1, typename Dummy2>
+  static auto Test(Dummy1* d1, Dummy2* d2)
+      -> decltype(std::declval<C>().GetMeasurement(*d1, *d2), std::true_type());
+
+  template <typename, typename, typename>
+  static std::false_type Test(...);
+
+  typedef decltype(Test<T, dummy, dummy>(nullptr, nullptr)) type;
+  static const bool value =
+      std::is_same<std::true_type, type>::value;
+};
+
+
 template <typename T>
 struct has_get_jacobian {
   struct dummy {};
@@ -38,4 +56,4 @@ struct has_get_jacobian {
 
 }  // namespace KalmanCpp
 
-#endif  // KALMAN_CPP_PREDICTOR_TYPE_TRAITS_H
+#endif  // KALMAN_CPP_TYPE_TRAITS_H

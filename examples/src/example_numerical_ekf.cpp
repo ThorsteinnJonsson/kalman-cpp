@@ -119,7 +119,7 @@ struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, Kalm
 struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanCpp::JacobianMethod::Numerical> {
   
   template <typename InMat, typename OutMat>
-  void GetPrediction(const InMat& in, OutMat& out) const {
+  void GetMeasurement(const InMat& in, OutMat& out) const {
     out(0) = in(0);
   }
 

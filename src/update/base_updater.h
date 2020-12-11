@@ -5,14 +5,21 @@
 #include <eigen3/unsupported/Eigen/AutoDiff>
 
 #include "filter_utils.h"
+#include "internal/type_traits.h"
 
 namespace KalmanCpp {
 
 template <typename Derived, typename Scalar, int StateDim, int MeasDim, JacobianMethod Method>
 class BaseUpdater {
- // TODO add static assert for type checking
+ private:
+  static constexpr void CompileTimeTypeValidation() {
+    static_assert(has_get_measurement<Derived>::value, "Derived updater does not have a GetMeasurement function defined!");
+    if constexpr (Method == JacobianMethod::Analytical) {
+      static_assert(has_get_jacobian<Derived>::value, "Derived updater does not have a GetJacobian function defined!");
+    }
+  }
  protected:
-  BaseUpdater() noexcept {};
+  BaseUpdater() noexcept { CompileTimeTypeValidation(); }
 
  public:
   typedef Eigen::Matrix<Scalar, StateDim, 1> InputType;
@@ -28,7 +35,7 @@ class BaseUpdater {
   template <typename InMat, typename OutMat>
   void GetMeasurement(const InMat& state, OutMat& measurement) const {
     const Derived* d = static_cast<const Derived*>(this);
-    d->template GetPrediction<InMat,OutMat>(state, measurement);
+    d->template GetMeasurement<InMat,OutMat>(state, measurement);
   }
 
   template <typename InMat, typename OutMat>

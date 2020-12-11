@@ -6,7 +6,7 @@
 #include <eigen3/unsupported/Eigen/AutoDiff>
 
 #include "filter_utils.h"
-#include "predict/predictor_type_traits.h"
+#include "internal/type_traits.h"
 
 
 namespace KalmanCpp {
@@ -21,7 +21,7 @@ class BasePredictor {
     }
   }
  protected:
-  BasePredictor() noexcept {CompileTimeTypeValidation();};
+  BasePredictor() noexcept {CompileTimeTypeValidation();}
 
  public:
   typedef Eigen::Matrix<Scalar, StateDim, 1> InputType;

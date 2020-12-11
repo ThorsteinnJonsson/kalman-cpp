@@ -84,18 +84,6 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Update(co
   P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
 }
 
-// template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
-// void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::NumericalUpdate(const MeasVec& z) {
-//   const Eigen::VectorXf y =
-//       (residual_.has_value()) ? (*residual_)(z, h_(x_)) : z - h_(x_);
-//   const auto H = h_jacobian_(x_);
-//   const Eigen::MatrixXf S = (H * P_ * H.transpose() + R_);
-//   const Eigen::MatrixXf K = P_ * H.transpose() * S.inverse();
-//   const Eigen::MatrixXf I = StateMat::Identity();
-//   x_ = x_ + K * y;
-//   P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
-// }
-
 template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
 void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::InitState(
     const StateVec& state, const StateMat& cov) {
