@@ -3,11 +3,11 @@
 
 #include <type_traits>
 
-namespace KalmanCpp {
+namespace KalmanCpp::type_traits {
 
 template <typename T>
 struct has_get_prediction {
-  struct dummy {};
+  struct Dummy {};
 
   template <typename C, typename Dummy1, typename Dummy2>
   static auto Test(Dummy1* d1, Dummy2* d2)
@@ -16,15 +16,18 @@ struct has_get_prediction {
   template <typename, typename, typename>
   static std::false_type Test(...);
 
-  typedef decltype(Test<T, dummy, dummy>(nullptr, nullptr)) type;
+  typedef decltype(Test<T, Dummy, Dummy>(nullptr, nullptr)) type;
   static const bool value =
       std::is_same<std::true_type, type>::value;
 };
 
+template <typename T> 
+inline constexpr bool has_get_prediction_v = has_get_prediction<T>::value;
+
 
 template <typename T>
 struct has_get_measurement {
-  struct dummy {};
+  struct Dummy {};
 
   template <typename C, typename Dummy1, typename Dummy2>
   static auto Test(Dummy1* d1, Dummy2* d2)
@@ -33,15 +36,18 @@ struct has_get_measurement {
   template <typename, typename, typename>
   static std::false_type Test(...);
 
-  typedef decltype(Test<T, dummy, dummy>(nullptr, nullptr)) type;
+  typedef decltype(Test<T, Dummy, Dummy>(nullptr, nullptr)) type;
   static const bool value =
       std::is_same<std::true_type, type>::value;
 };
 
+template <typename T> 
+inline constexpr bool has_get_measurement_v = has_get_measurement<T>::value;
+
 
 template <typename T>
 struct has_get_jacobian {
-  struct dummy {};
+  struct Dummy {};
 
   template <typename C, typename Dummy1, typename Dummy2>
   static auto Test(Dummy1* d1, Dummy2* d2) -> decltype(std::declval<C>().GetJacobian(*d1, *d2), std::true_type());
@@ -49,10 +55,13 @@ struct has_get_jacobian {
   template <typename, typename, typename>
   static std::false_type Test(...);
 
-  typedef decltype(Test<T, dummy, dummy>(nullptr, nullptr)) type;
+  typedef decltype(Test<T, Dummy, Dummy>(nullptr, nullptr)) type;
   static const bool value =
       std::is_same<std::true_type, type>::value;
 };
+
+template <typename T> 
+inline constexpr bool has_get_jacobian_v = has_get_jacobian<T>::value;
 
 }  // namespace KalmanCpp
 

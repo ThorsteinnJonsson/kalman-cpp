@@ -13,9 +13,9 @@ template <typename Derived, typename Scalar, int StateDim, int MeasDim, Jacobian
 class BaseUpdater {
  private:
   static constexpr void CompileTimeTypeValidation() {
-    static_assert(has_get_measurement<Derived>::value, "Derived updater does not have a GetMeasurement function defined!");
+    static_assert(type_traits::has_get_measurement_v<Derived>, "Derived updater does not have a GetMeasurement function defined!");
     if constexpr (Method == JacobianMethod::Analytical) {
-      static_assert(has_get_jacobian<Derived>::value, "Derived updater does not have a GetJacobian function defined!");
+      static_assert(type_traits::has_get_jacobian_v<Derived>, "Derived updater does not have a GetJacobian function defined!");
     }
   }
  protected:
