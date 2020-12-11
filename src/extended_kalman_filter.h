@@ -9,10 +9,11 @@
 
 #include "filter_utils.h"
 #include "predict/base_predictor.h"
+#include "update/base_updater.h"
 
 namespace KalmanCpp {
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor>
+template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
 class ExtendedKalmanFilter {
  private:
   using StateVec = Eigen::Matrix<T, StateDim, 1>;
@@ -28,29 +29,19 @@ class ExtendedKalmanFilter {
   void Predict(float dt);
   void Predict(const StateVec& u, float dt);
   void Update(const MeasVec& z);
-  void NumericalUpdate(const MeasVec& z); // TODO determine if numerical jacobian is used by template 
 
   void InitState(const StateVec& state, const StateMat& cov);
   void InitUncertainty(const StateMat& process_noise,
                        const MeasMat& measurement_noise);
 
-  void SetMeasurementFunction(std::function<MeasVec(const StateVec&)>&& func) {
-    h_ = func;
-  }
-  void SetMeasurementJacobian(std::function<ObservationModelMat(const StateVec&)>&& func) {
-    h_jacobian_ = func;
-  }
 
   void SetControlInputFunction(const StateMat& B) {
     B_ = B;
   }
 
-  void SetResidualFunction(
-      std::function<MeasVec(const MeasVec&, const MeasVec&)>&& residual_func) {
-    residual_ = residual_func;
-  }
-
   void SetPredictor(std::unique_ptr<TPredictor>&& predictor) { predictor_ = std::move(predictor); }
+  void SetUpdater(std::unique_ptr<TUpdater>&& updater) {updater_ = std::move(updater); }
+  
 
   const StateVec& State() const { return x_; }
   const StateMat& Uncertainty() const { return P_; }
@@ -62,35 +53,30 @@ class ExtendedKalmanFilter {
   StateMat Q_;
   MeasMat R_;
 
-
-  std::function<MeasVec(const StateVec&)> h_; // TODO use numerical
-  std::function<ObservationModelMat(const StateVec&)> h_jacobian_;
-  std::optional<std::function<MeasVec(const MeasVec&, const MeasVec&)>>
-      residual_;
-
   StateMat B_;  // Control model
 
   std::unique_ptr<TPredictor> predictor_;
+
+  std::unique_ptr<TUpdater> updater_;
 };
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor>::Predict(float dt) {
+template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Predict(float dt) {
   auto [x_new, jacobian] = predictor_->template Predict<StateVec,StateVec,StateMat>(x_, dt);
   x_ = x_new;
   P_ = jacobian * P_ * jacobian.transpose() + Q_;
 }
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor>::Predict(const StateVec& u, float dt) {
+template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Predict(const StateVec& u, float dt) {
   Predict(dt);
   x_ += B_ * u;
 }
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor>::Update(const MeasVec& z) {
-  const Eigen::VectorXf y =
-      (residual_.has_value()) ? (*residual_)(z, h_(x_)) : z - h_(x_);
-  const auto H = h_jacobian_(x_);
+template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Update(const MeasVec& z) {
+  auto [z_hat, H] = updater_->template Update<StateVec,MeasVec,ObservationModelMat>(x_);
+  const Eigen::VectorXf y = z - z_hat;
   const Eigen::MatrixXf S = (H * P_ * H.transpose() + R_);
   const Eigen::MatrixXf K = P_ * H.transpose() * S.inverse();
   const Eigen::MatrixXf I = StateMat::Identity();
@@ -98,27 +84,27 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor>::Update(const MeasVe
   P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
 }
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor>::NumericalUpdate(const MeasVec& z) {
-  const Eigen::VectorXf y =
-      (residual_.has_value()) ? (*residual_)(z, h_(x_)) : z - h_(x_);
-  const auto H = h_jacobian_(x_);
-  const Eigen::MatrixXf S = (H * P_ * H.transpose() + R_);
-  const Eigen::MatrixXf K = P_ * H.transpose() * S.inverse();
-  const Eigen::MatrixXf I = StateMat::Identity();
-  x_ = x_ + K * y;
-  P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
-}
+// template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+// void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::NumericalUpdate(const MeasVec& z) {
+//   const Eigen::VectorXf y =
+//       (residual_.has_value()) ? (*residual_)(z, h_(x_)) : z - h_(x_);
+//   const auto H = h_jacobian_(x_);
+//   const Eigen::MatrixXf S = (H * P_ * H.transpose() + R_);
+//   const Eigen::MatrixXf K = P_ * H.transpose() * S.inverse();
+//   const Eigen::MatrixXf I = StateMat::Identity();
+//   x_ = x_ + K * y;
+//   P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
+// }
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor>::InitState(
+template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::InitState(
     const StateVec& state, const StateMat& cov) {
   x_ = state;
   P_ = cov;
 }
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor>::InitUncertainty(
+template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::InitUncertainty(
     const StateMat& process_noise, const MeasMat& measurement_noise) {
   Q_ = process_noise;
   R_ = measurement_noise;

@@ -116,11 +116,25 @@ struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, Kalm
 
 };
 
+struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanCpp::JacobianMethod::Numerical> {
+  
+  template <typename InMat, typename OutMat>
+  void GetPrediction(const InMat& in, OutMat& out) const {
+    out(0) = in(0);
+  }
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor >
-KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor> SetupFilter(
+  template <typename InMat, typename OutMat>
+  void GetJacobian([[maybe_unused]]const InMat& in, OutMat& jacobian) const {
+    jacobian = OutMat::Zero();
+    jacobian(0, 0) = 1.0f;
+  }
+
+};
+
+template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor, TUpdater> SetupFilter(
     float process_var, float meas_var, float dt) {
-  KalmanCpp::ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor> kf;
+  KalmanCpp::ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater> kf;
 
   Eigen::Vector2f init_state =
       Eigen::Vector2f::Zero();  // Position and velocity
@@ -141,20 +155,8 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor> SetupFilte
   std::unique_ptr<MyPredictor> predictor = std::make_unique<MyPredictor>();
   kf.SetPredictor(std::move(predictor));
 
-  // Measurment function
-  auto measurement_func = [](const Eigen::VectorXf& x) -> Eigen::VectorXf {
-    Eigen::MatrixXf z(1, 1);
-    z << x(0);
-    return z;
-  };
-  kf.SetMeasurementFunction(std::move(measurement_func));
-
-  auto measurement_jacobian = [](const Eigen::VectorXf&) -> Eigen::MatrixXf {
-    Eigen::MatrixXf jacobian = Eigen::MatrixXf::Zero(1, 2);
-    jacobian(0, 0) = 1.0f;
-    return jacobian;
-  };
-  kf.SetMeasurementJacobian(std::move(measurement_jacobian));
+  std::unique_ptr<MyUpdater> updater = std::make_unique<MyUpdater>();
+  kf.SetUpdater(std::move(updater));
 
   return kf;
 }
@@ -168,7 +170,7 @@ void RunExample() {
   constexpr float filter_meas_var = 10.0f;
   constexpr float dt = 1.0f;  // Assume constant timestep
   auto kf =
-      SetupFilter<float, state_dim, meas_dim, MyPredictor>(filter_process_var, filter_meas_var, dt);
+      SetupFilter<float, state_dim, meas_dim, MyPredictor, MyUpdater>(filter_process_var, filter_meas_var, dt);
 
   // Get measurements
   constexpr size_t num_meas = 50;
@@ -184,7 +186,7 @@ void RunExample() {
 
     Eigen::MatrixXf z(meas_dim, 1);
     z << meas.value;
-    kf.NumericalUpdate(z);
+    kf.Update(z);
 
     track.push_back(kf.State());
   }
