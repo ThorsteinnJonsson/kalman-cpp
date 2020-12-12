@@ -1,20 +1,18 @@
-[![Actions Status](https://github.com/filipdutescu/modern-cpp-template/workflows/MacOS/badge.svg)](https://github.com/filipdutescu/modern-cpp-template/actions)
+<!-- [![Actions Status](https://github.com/filipdutescu/modern-cpp-template/workflows/MacOS/badge.svg)](https://github.com/filipdutescu/modern-cpp-template/actions)
 [![Actions Status](https://github.com/filipdutescu/modern-cpp-template/workflows/Windows/badge.svg)](https://github.com/filipdutescu/modern-cpp-template/actions)
 [![Actions Status](https://github.com/filipdutescu/modern-cpp-template/workflows/Ubuntu/badge.svg)](https://github.com/filipdutescu/modern-cpp-template/actions)
 [![codecov](https://codecov.io/gh/filipdutescu/modern-cpp-template/branch/master/graph/badge.svg)](https://codecov.io/gh/filipdutescu/modern-cpp-template)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/filipdutescu/modern-cpp-template)](https://github.com/filipdutescu/modern-cpp-template/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/filipdutescu/modern-cpp-template)](https://github.com/filipdutescu/modern-cpp-template/releases) -->
 
-# Modern C++ Template
+# KalmanCPP
 
-A quick C++ template for modern CMake projects, aimed to be an easy to use
-starting point.
+Kalman filter library written in C++17 with an emphasis on templates. This library provides an easily extensible framework for implementing your own Kalman filters based on provided base implementations.
 
-This is my personal take on such a type of template, thus I might not use the
-best practices or you might disagree with how I do things. Any and all feedback
-is greatly appreciated!
+Currently, only an extended Kalman filter base implementation is available. The user implements their own prediction and update steps and passes to the filter. The library also allows the user to choose between using numerical and analytical methods for calculating Jacobians, further simplifying implementation. For more details, see the example folder.
+
 
 ## Features
-
+<!-- 
 * Modern **CMake** configuration and project, which, to the best of my
 knowledge, uses the best practices,
 
@@ -50,11 +48,11 @@ template is licensed under the [Unlicense](https://unlicense.org/),
 * Options to build as a header-only library or executable, not just a static or
 shared library.
 
-* **Ccache** integration, for speeding up rebuild times
+* **Ccache** integration, for speeding up rebuild times -->
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local
+<!-- These instructions will get you a copy of the project up and running on your local
 machine for development and testing purposes.
 
 ### Prerequisites
@@ -124,11 +122,11 @@ cmake --build build --target install --config Release
 
 # a more general syntax for that command is:
 cmake --build <build_directory> --target install --config <desired_config>
-```
+``` -->
 
 ## Building the project
 
-To build the project, all you need to do, ***after correctly
+<!-- To build the project, all you need to do, ***after correctly
 [installing the project](README.md#Installing)***, is run a similar **CMake** routine
 to the the one below:
 
@@ -145,9 +143,9 @@ More options that you can set for the project can be found in the
 [`cmake/StandardSettings.cmake` file](cmake/StandardSettings.cmake). For certain
 options additional configuration may be needed in their respective `*.cmake` files
 (i.e. Conan needs the `CONAN_REQUIRES` and might need the `CONAN_OPTIONS` to be setup
-for it work correctly; the two are set in the [`cmake/Conan.cmake` file](cmake/Conan.cmake)).
+for it work correctly; the two are set in the [`cmake/Conan.cmake` file](cmake/Conan.cmake)). -->
 
-## Generating the documentation
+<!-- ## Generating the documentation
 
 In order to generate documentation for the project, you need to configure the build
 to use Doxygen. This is easily done, by modifying the workflow shown above as follows:
@@ -158,11 +156,11 @@ cmake .. -D<project_name>_ENABLE_DOXYGEN=1 -DCMAKE_INSTALL_PREFIX=/absolute/path
 cmake --build . --target doxygen-docs
 ```
 
-> ***Note:*** *This will generate a `docs/` directory in the **project's root directory**.*
+> ***Note:*** *This will generate a `docs/` directory in the **project's root directory**.* -->
 
 ## Running the tests
 
-By default, the template uses [Google Test](https://github.com/google/googletest/)
+<!-- By default, the template uses [Google Test](https://github.com/google/googletest/)
 for unit testing. Unit testing can be disabled in the options, by setting the
 `ENABLE_UNIT_TESTING` (from
 [cmake/StandardSettings.cmake](cmake/StandardSettings.cmake)) to be false. To run
@@ -183,7 +181,7 @@ If applicable, should be presented here.
 
 ### Coding style tests
 
-If applicable, should be presented here.
+If applicable, should be presented here. -->
 
 ## Contributing
 
@@ -191,16 +189,16 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our how you can
 become a contributor and the process for submitting pull requests to us.
 
 ## Versioning
-
-This project makes use of [SemVer](http://semver.org/) for versioning. A list of
+TBD
+<!-- This project makes use of [SemVer](http://semver.org/) for versioning. A list of
 existing versions can be found in the
-[project's releases](https://github.com/filipdutescu/modern-cpp-template/releases).
+[project's releases](https://github.com/filipdutescu/modern-cpp-template/releases). -->
 
 ## Authors
 
-* **Filip-Ioan Dutescu** - [@filipdutescu](https://github.com/filipdutescu)
+* **Thorsteinn Jonsson** - [@ThorsteinnJonsson](https://github.com/ThorsteinnJonsson)
 
 ## License
-
-This project is licensed under the [Unlicense](https://unlicense.org/) - see the
-[LICENSE](LICENSE) file for details
+TBD
+<!-- This project is licensed under the [Unlicense](https://unlicense.org/) - see the
+[LICENSE](LICENSE) file for details -->
