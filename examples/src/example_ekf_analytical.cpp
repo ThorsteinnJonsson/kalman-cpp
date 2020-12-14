@@ -100,7 +100,7 @@ void PlotResult(const std::vector<Measurement>& measurements,
 
 // Define a predictor for the EKF. GetPrediction always has to be defined. GetJacobian only has to be defined if
 // the Jacobian method is set to "analytical".
-struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, KalmanCpp::JacobianMethod::Numerical> {
+struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, KalmanCpp::JacobianMethod::Analytical> {
   
   template <typename InMat, typename OutMat>
   void GetPrediction(const InMat& in, OutMat& out) const {
