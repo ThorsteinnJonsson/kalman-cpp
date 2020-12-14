@@ -13,7 +13,7 @@
 
 namespace KalmanCpp {
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater> // TODO check if T is floating
 class ExtendedKalmanFilter {
  private:
   using StateVec = Eigen::Matrix<T, StateDim, 1>;

@@ -8,7 +8,6 @@ set(exe_sources
 )
 
 set(headers
-  src/kalman_filter.h
   src/extended_kalman_filter.h
   src/filter_utils.h
   src/predict/base_predictor.h
