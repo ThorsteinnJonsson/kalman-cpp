@@ -10,6 +10,7 @@
 
 #include <matplot/matplot.h>
 
+
 struct Measurement {
   float ground_truth;
   float value;
@@ -96,10 +97,48 @@ void PlotResult(const std::vector<Measurement>& measurements,
   matplot::show();
 }
 
-template <int StateDim, int MeasDim>
-KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> SetupFilter(
+
+// Define a predictor for the EKF. GetPrediction always has to be defined. GetJacobian only has to be defined if
+// the Jacobian method is set to "analytical".
+struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, KalmanCpp::JacobianMethod::Analytical> {
+  
+  template <typename InMat, typename OutMat>
+  void GetPrediction(const InMat& in, OutMat& out) const {
+    out = OutMat::Zero();
+    out(0) = in(0) + in(1) * this->Timestep();
+    out(1) = in(1);
+  }
+
+  template <typename InMat, typename OutMat>
+  void GetJacobian([[maybe_unused]]const InMat& in, OutMat& jacobian) const {
+    jacobian = OutMat::Identity();
+    jacobian(0, 1) = this->Timestep();
+  }
+
+};
+
+// Define a updater for the EKF. GetMeasurement always has to be defined. GetJacobian only has to be defined if
+// the Jacobian method is set to "analytical".
+struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanCpp::JacobianMethod::Analytical> {
+  
+  template <typename InMat, typename OutMat>
+  void GetMeasurement(const InMat& in, OutMat& out) const {
+    out = OutMat::Zero();
+    out(0) = in(0);
+  }
+
+  template <typename InMat, typename OutMat>
+  void GetJacobian([[maybe_unused]]const InMat& in, OutMat& jacobian) const {
+    jacobian = OutMat::Zero();
+    jacobian(0, 0) = 1.0f;
+  }
+
+};
+
+template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor, TUpdater> SetupFilter(
     float process_var, float meas_var, float dt) {
-  KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> kf;
+  KalmanCpp::ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater> kf;
 
   Eigen::Vector2f init_state =
       Eigen::Vector2f::Zero();  // Position and velocity
@@ -116,41 +155,15 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim> SetupFilter(
   measurement_noise << meas_var;
   kf.InitUncertainty(process_noise, measurement_noise);
 
-  // State transition
-  auto state_transition = [](const Eigen::VectorXf& x,
-                             float timestep) -> Eigen::VectorXf {
-    Eigen::Vector2f x_new;
-    x_new(0) = x(0) + timestep * x(1);
-    x_new(1) = x(1);
-    return x_new;
-  };
-  kf.SetStateTransitionFunction(std::move(state_transition));
+  std::unique_ptr<MyPredictor> predictor = std::make_unique<MyPredictor>();
+  kf.SetPredictor(std::move(predictor));
 
-  auto state_transition_jacobian = [](const Eigen::VectorXf&,
-                                      float timestep) -> Eigen::MatrixXf {
-    Eigen::Matrix2f jacobian = Eigen::Matrix2f::Identity();
-    jacobian(0, 1) = timestep;
-    return jacobian;
-  };
-  kf.SetStateTransitionJacobian(std::move(state_transition_jacobian));
-
-  // Measurment function
-  auto measurement_func = [](const Eigen::VectorXf& x) -> Eigen::VectorXf {
-    Eigen::MatrixXf z(1, 1);
-    z << x(0);
-    return z;
-  };
-  kf.SetMeasurementFunction(std::move(measurement_func));
-
-  auto measurement_jacobian = [](const Eigen::VectorXf&) -> Eigen::MatrixXf {
-    Eigen::MatrixXf jacobian = Eigen::MatrixXf::Zero(1, 2);
-    jacobian(0, 0) = 1.0f;
-    return jacobian;
-  };
-  kf.SetMeasurementJacobian(std::move(measurement_jacobian));
+  std::unique_ptr<MyUpdater> updater = std::make_unique<MyUpdater>();
+  kf.SetUpdater(std::move(updater));
 
   return kf;
 }
+
 
 void RunExample() {
   // Set up Kalman filter
@@ -160,7 +173,7 @@ void RunExample() {
   constexpr float filter_meas_var = 10.0f;
   constexpr float dt = 1.0f;  // Assume constant timestep
   auto kf =
-      SetupFilter<state_dim, meas_dim>(filter_process_var, filter_meas_var, dt);
+      SetupFilter<float, state_dim, meas_dim, MyPredictor, MyUpdater>(filter_process_var, filter_meas_var, dt);
 
   // Get measurements
   constexpr size_t num_meas = 50;

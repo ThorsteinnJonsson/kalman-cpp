@@ -104,31 +104,21 @@ struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, Kalm
   
   template <typename InMat, typename OutMat>
   void GetPrediction(const InMat& in, OutMat& out) const {
+    out = OutMat::Zero();
     out(0) = in(0) + in(1) * this->Timestep();
     out(1) = in(1);
-  }
-
-  template <typename InMat, typename OutMat>
-  void GetJacobian([[maybe_unused]]const InMat& in, OutMat& jacobian) const {
-    jacobian = OutMat::Identity();
-    jacobian(0, 1) = this->Timestep();
   }
 
 };
 
 // Define a updater for the EKF. GetMeasurement always has to be defined. GetJacobian only has to be defined if
 // the Jacobian method is set to "analytical".
-struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanCpp::JacobianMethod::Analytical> {
+struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanCpp::JacobianMethod::Numerical> {
   
   template <typename InMat, typename OutMat>
   void GetMeasurement(const InMat& in, OutMat& out) const {
+    out = OutMat::Zero();
     out(0) = in(0);
-  }
-
-  template <typename InMat, typename OutMat>
-  void GetJacobian([[maybe_unused]]const InMat& in, OutMat& jacobian) const {
-    jacobian = OutMat::Zero();
-    jacobian(0, 0) = 1.0f;
   }
 
 };
@@ -153,7 +143,6 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor, TUpdater> 
   measurement_noise << meas_var;
   kf.InitUncertainty(process_noise, measurement_noise);
 
-  // State transition
   std::unique_ptr<MyPredictor> predictor = std::make_unique<MyPredictor>();
   kf.SetPredictor(std::move(predictor));
 
