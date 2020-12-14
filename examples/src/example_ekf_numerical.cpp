@@ -104,6 +104,7 @@ struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 2, Kalm
   
   template <typename InMat, typename OutMat>
   void GetPrediction(const InMat& in, OutMat& out) const {
+    out = OutMat::Zero();
     out(0) = in(0) + in(1) * this->Timestep();
     out(1) = in(1);
   }
@@ -116,6 +117,7 @@ struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanC
   
   template <typename InMat, typename OutMat>
   void GetMeasurement(const InMat& in, OutMat& out) const {
+    out = OutMat::Zero();
     out(0) = in(0);
   }
 
@@ -141,7 +143,6 @@ KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor, TUpdater> 
   measurement_noise << meas_var;
   kf.InitUncertainty(process_noise, measurement_noise);
 
-  // State transition
   std::unique_ptr<MyPredictor> predictor = std::make_unique<MyPredictor>();
   kf.SetPredictor(std::move(predictor));
 

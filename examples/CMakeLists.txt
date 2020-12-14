@@ -42,13 +42,13 @@ target_link_libraries_system(EXAMPLE_EKF_ANALYTICAL PRIVATE matplot)
 
 
 #
-# Extended Kalman filter example 2
+# Example usage of the Extended Kalman filter. (Not neccesarily "advanced", find better name later)
 #
-# add_executable(EKF_EXAMPLE_2 src/example_ekf_2.cpp)
-# target_compile_features(EKF_EXAMPLE_2 PUBLIC cxx_std_17)
-# target_link_libraries(
-#   EKF_EXAMPLE_2
-#   PRIVATE
-#     ${CMAKE_PROJECT_NAME}
-# )
-# target_link_libraries_system(EKF_EXAMPLE_2 PRIVATE matplot)
+add_executable(EXAMPLE_EKF_ADVANCED src/example_ekf_advanced.cpp)
+target_compile_features(EXAMPLE_EKF_ADVANCED PUBLIC cxx_std_17)
+target_link_libraries(
+  EXAMPLE_EKF_ADVANCED
+  PRIVATE
+    ${CMAKE_PROJECT_NAME}
+)
+target_link_libraries_system(EXAMPLE_EKF_ADVANCED PRIVATE matplot)

@@ -24,11 +24,14 @@ class BaseUpdater {
  public:
   typedef Eigen::Matrix<Scalar, StateDim, 1> InputType;
   typedef Eigen::Matrix<Scalar, MeasDim, 1> ValueType;
+  typedef Eigen::Matrix<Scalar, MeasDim, StateDim> JacobianType;
 
   enum {
     InputsAtCompileTime = InputType::RowsAtCompileTime,
     ValuesAtCompileTime = ValueType::RowsAtCompileTime
   };
+
+  size_t inputs() const { return InputsAtCompileTime; }
 
  protected:
 
