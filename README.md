@@ -1,153 +1,60 @@
-[![Actions Status](https://github.com/filipdutescu/modern-cpp-template/workflows/MacOS/badge.svg)](https://github.com/filipdutescu/modern-cpp-template/actions)
+<!-- [![Actions Status](https://github.com/filipdutescu/modern-cpp-template/workflows/MacOS/badge.svg)](https://github.com/filipdutescu/modern-cpp-template/actions)
 [![Actions Status](https://github.com/filipdutescu/modern-cpp-template/workflows/Windows/badge.svg)](https://github.com/filipdutescu/modern-cpp-template/actions)
 [![Actions Status](https://github.com/filipdutescu/modern-cpp-template/workflows/Ubuntu/badge.svg)](https://github.com/filipdutescu/modern-cpp-template/actions)
 [![codecov](https://codecov.io/gh/filipdutescu/modern-cpp-template/branch/master/graph/badge.svg)](https://codecov.io/gh/filipdutescu/modern-cpp-template)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/filipdutescu/modern-cpp-template)](https://github.com/filipdutescu/modern-cpp-template/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/filipdutescu/modern-cpp-template)](https://github.com/filipdutescu/modern-cpp-template/releases) -->
 
-# Modern C++ Template
+# KalmanCPP
 
-A quick C++ template for modern CMake projects, aimed to be an easy to use
-starting point.
+Kalman filter library written in C++17 with an emphasis on templates. This library provides an easily extensible framework for implementing your own Kalman filters based on the provided base implementations.
 
-This is my personal take on such a type of template, thus I might not use the
-best practices or you might disagree with how I do things. Any and all feedback
-is greatly appreciated!
+Currently, only an extended Kalman filter (EKF) base implementation is available. The user implements their own prediction and update steps and passes to the filter. The library also allows the user to choose between using numerical and analytical methods for calculating Jacobians, further simplifying implementation. For more details, see the example folder.
+
 
 ## Features
+TBD
 
-* Modern **CMake** configuration and project, which, to the best of my
-knowledge, uses the best practices,
 
-* An example of a **Clang-Format** config, inspired from the base *Google* model,
-with minor tweaks. This is aimed only as a starting point, as coding style
-is a subjective matter, everyone is free to either delete it (for the *LLVM*
-default) or supply their own alternative,
-
-* **Static analyzers** integration, with *Clang-Tidy* and *Cppcheck*, the former
-being the default option,
-
-* **Doxygen** support, through the `ENABLE_DOXYGEN` option, which you can enable
-if you wish to use it,
-
-* **Unit testing** support, through *GoogleTest* (with an option to enable
-*GoogleMock*) or *Catch2*,
-
-* **Code coverage**, enabled by using the `ENABLE_CODE_COVERAGE` option, through
-*Codecov* CI integration,
-
-* **Package manager support**, with *Conan* and *Vcpkg*, through their respective
-options
-
-* **CI workflows for Windows, Linux and MacOS** using *GitHub Actions*, making
-use of the caching features, to ensure minimum run time,
-
-* **.md templates** for: *README*, *Contributing Guideliness*,
-*Issues* and *Pull Requests*,
-
-* **Permissive license** to allow you to integrate it as easily as possible. The
-template is licensed under the [Unlicense](https://unlicense.org/),
-
-* Options to build as a header-only library or executable, not just a static or
-shared library.
-
-* **Ccache** integration, for speeding up rebuild times
-
-## Getting Started
+## Getting started
 
 These instructions will get you a copy of the project up and running on your local
 machine for development and testing purposes.
 
 ### Prerequisites
 
-This project is meant to be only a template, thus versions of the software used
-can be change to better suit the needs of the developer(s). If you wish to use the
-template *as-is*, meaning using the versions recommended here, then you will need:
+* **CMake v3.15+** - found at [https://cmake.org/](https://cmake.org/).
 
-* **CMake v3.15+** - found at [https://cmake.org/](https://cmake.org/)
+* **C++ Compiler** - needs to support at least the **C++17** standard. 
+    This project has so far only been tested using *GCC* (v9.3) so it is not guaranteed to 
+    work on other compilers such as *Clang* or *MSVC*. Support for them will be added at some
+    point in the future when time allows.
 
-* **C++ Compiler** - needs to support at least the **C++17** standard, i.e. *MSVC*,
-*GCC*, *Clang*
+> ***Note:*** *You also need to be able to provide ***CMake*** a supported [generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html).*
+   This project has mostly been tested with [Ninja](https://cmake.org/cmake/help/latest/generator/Ninja.html) so it is recommended to use that one
+   unless you have a good reason to use something else.
 
-> ***Note:*** *You also need to be able to provide ***CMake*** a supported
-[generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html).*
+* **Conan (package manager)** - Used for managing dependancies such as the Eigen library. More information [here](https://conan.io/).
 
-### Installing
+### Building the library
+If you are only interested in using the *KalmanCpp* library inside your own project, skip to the next section.
+Building the library as a standalone-project should only be needed if you plan on contributing to the project or
+if you want to run the examples.
 
-It is fairly easy to install the project, all you need to do is clone if from
-[GitHub](https://github.com/filipdutescu/modern-cpp-template) or
-[generate a new repository from it](https://github.com/filipdutescu/modern-cpp-template/generate)
-(also on **GitHub**).
-
-If you wish to clone the repository, rather than generate from it, you simply need
-to run:
-
-```bash
-git clone https://github.com/filipdutescu/modern-cpp-template/
-```
-
-After finishing getting a copy of the project, with any of the methods above, create
-a new folder in the `include/` folder, with the name of your project.  Edit
-`cmake/SourcesAndHeaders.cmake` to add your files.
-
-You will also need to rename the `cmake/ProjectConfig.cmake.in` file to start with
-the ***exact name of your project***. Such as `cmake/MyNewProjectConfig.cmake.in`.
-You should also make the same changes in the GitHub workflows provided, notably
-[`.github/workflows/ubuntu.yml`](.github/workflows/ubuntu.yml), in which you should
-replace the CMake option `-DProject_ENABLE_CODE_COVERAGE=1` to
-`-DMyNewProject_ENABLE_CODE_COVERAGE=1`.
-
-Finally, change `"Project"` from `CMakeLists.txt`, from
-
-```cmake
-project(
-  "Project"
-  VERSION 0.1.0
-  LANGUAGES CXX
-)
-```
-
-to the ***exact name of your project***, i.e. using the previous name it will become:
-
-```cmake
-project(
-  MyNewProject
-  VERSION 0.1.0
-  LANGUAGES CXX
-)
-```
-
-To install an already built project, you need to run the `install` target with CMake.
-For example:
+We recommend building your library through an editor such as *CLion*, *Visual Studio* or *Visual Studio Code*.
+If you want to build from the terminal however, you can run the following commands from the library root directory:
 
 ```bash
-cmake --build build --target install --config Release
-
-# a more general syntax for that command is:
-cmake --build <build_directory> --target install --config <desired_config>
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -GNinja .. && ninja
 ```
 
-## Building the project
+### Including KalmanCpp in your own project
+To include **KalmanCpp** in your own project, you can clone the library as a submodule and use the 
+`add_subdirectory(kalman_cpp)` command in your `CMakeLists.txt` file. You will also need to link the 
+library to your project using the `target_link_libraries` command in *CMake*.
 
-To build the project, all you need to do, ***after correctly
-[installing the project](README.md#Installing)***, is run a similar **CMake** routine
-to the the one below:
 
-```bash
-mkdir build/ && cd build/
-cmake .. -DCMAKE_INSTALL_PREFIX=/absolute/path/to/custom/install/directory
-cmake --build . --target install
-```
-
-> ***Note:*** *The custom ``CMAKE_INSTALL_PREFIX`` can be omitted if you wish to
-install in [the default install location](https://cmake.org/cmake/help/latest/module/GNUInstallDirs.html).*
-
-More options that you can set for the project can be found in the
-[`cmake/StandardSettings.cmake` file](cmake/StandardSettings.cmake). For certain
-options additional configuration may be needed in their respective `*.cmake` files
-(i.e. Conan needs the `CONAN_REQUIRES` and might need the `CONAN_OPTIONS` to be setup
-for it work correctly; the two are set in the [`cmake/Conan.cmake` file](cmake/Conan.cmake)).
-
-## Generating the documentation
+<!-- ## Generating the documentation
 
 In order to generate documentation for the project, you need to configure the build
 to use Doxygen. This is easily done, by modifying the workflow shown above as follows:
@@ -158,12 +65,12 @@ cmake .. -D<project_name>_ENABLE_DOXYGEN=1 -DCMAKE_INSTALL_PREFIX=/absolute/path
 cmake --build . --target doxygen-docs
 ```
 
-> ***Note:*** *This will generate a `docs/` directory in the **project's root directory**.*
+> ***Note:*** *This will generate a `docs/` directory in the **project's root directory**.* -->
 
 ## Running the tests
 
-By default, the template uses [Google Test](https://github.com/google/googletest/)
-for unit testing. Unit testing can be disabled in the options, by setting the
+This library makes use of [Google Test](https://github.com/google/googletest/) for unit 
+testing. Unit testing can be disabled in the options, by setting the
 `ENABLE_UNIT_TESTING` (from
 [cmake/StandardSettings.cmake](cmake/StandardSettings.cmake)) to be false. To run
 the tests, simply use CTest, from the build directory, passing the desire
@@ -177,13 +84,13 @@ ctest -C Release  # or `ctest -C Debug` or any other configuration you wish to t
 #GoogleTest output as well)
 ```
 
-### End to end tests
+<!-- ### End to end tests
 
 If applicable, should be presented here.
 
 ### Coding style tests
 
-If applicable, should be presented here.
+If applicable, should be presented here. -->
 
 ## Contributing
 
@@ -191,16 +98,20 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our how you can
 become a contributor and the process for submitting pull requests to us.
 
 ## Versioning
-
-This project makes use of [SemVer](http://semver.org/) for versioning. A list of
+TBD
+This is not properly released yet and still in early development. Once more developed,
+a proper versioning system will be used. We plan on using [SemVer](http://semver.org/)
+for versioning, so the project in its current state can effectively be though of as
+*version 0.0.0*.
+<!-- This project makes use of [SemVer](http://semver.org/) for versioning. A list of
 existing versions can be found in the
-[project's releases](https://github.com/filipdutescu/modern-cpp-template/releases).
+[project's releases](https://github.com/filipdutescu/modern-cpp-template/releases). -->
 
 ## Authors
 
-* **Filip-Ioan Dutescu** - [@filipdutescu](https://github.com/filipdutescu)
+* **Thorsteinn Jonsson** - [@ThorsteinnJonsson](https://github.com/ThorsteinnJonsson)
 
 ## License
-
-This project is licensed under the [Unlicense](https://unlicense.org/) - see the
-[LICENSE](LICENSE) file for details
+TBD
+<!-- This project is licensed under the [Unlicense](https://unlicense.org/) - see the
+[LICENSE](LICENSE) file for details -->
