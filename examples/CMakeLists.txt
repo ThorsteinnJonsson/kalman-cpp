@@ -51,18 +51,6 @@ target_link_libraries_system(KF_EXAMPLE_1 PRIVATE matplot)
 # target_link_libraries_system(EKF_EXAMPLE_2 PRIVATE matplot)
 
 
-
-add_executable(AUTODIFF_TEST src/auto_diff_test.cpp)
-target_compile_features(AUTODIFF_TEST PUBLIC cxx_std_17)
-target_link_libraries(
-  AUTODIFF_TEST
-  PRIVATE
-    ${CMAKE_PROJECT_NAME}
-    CONAN_PKG::eigen
-)
-target_link_libraries_system(AUTODIFF_TEST PRIVATE matplot)
-
-
 add_executable(EKF_EXAMPLE_NUMERICAL src/example_numerical_ekf.cpp)
 target_compile_features(EKF_EXAMPLE_NUMERICAL PUBLIC cxx_std_17)
 target_link_libraries(
