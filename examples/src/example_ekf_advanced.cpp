@@ -6,7 +6,6 @@
 #include <chrono>
 #include <random>
 #include <cmath>
-#include <iostream>
 
 #include <matplot/matplot.h>
 
@@ -107,7 +106,7 @@ struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 4, Kalm
   }
 
   template <typename ControlMat>
-  void ApplyControlInput(const ControlMat& control_input, ControlMat& control_out) {
+  void GetControlInput(const ControlMat& control_input, ControlMat& control_out) {
     Eigen::MatrixXf B = Eigen::MatrixXf::Zero(4,4); // Control model matrix
     B(3,3) = 1.0f;
     control_out = B * control_input;

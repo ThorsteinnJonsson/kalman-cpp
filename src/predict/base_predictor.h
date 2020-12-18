@@ -49,6 +49,12 @@ class BasePredictor {
     d->template GetJacobian<InMat,OutMat>(state, jacobian);
   }
 
+  template <typename ControlMat>
+  void GetControlInput(const ControlMat& control_input, ControlMat& control_out) const {
+    const Derived* d = static_cast<const Derived*>(this);
+    d->template GetControlInput<ControlMat>(control_input, control_out);
+  }
+
   float Timestep() const {return this->dt_; }
 
  public:

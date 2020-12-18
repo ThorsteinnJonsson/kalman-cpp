@@ -61,9 +61,13 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Predict(f
 
 template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
 void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Predict(const StateVec& u, float dt) {
+  static_assert(type_traits::has_apply_control_input_v<decltype(*predictor_)>, 
+                                    "You need to define the GetControlInput member function of your predictor "
+                                    "to be able to use the Predict function with control input.");
+  
   Predict(dt);
   StateVec control; 
-  predictor_->template ApplyControlInput<StateVec>(u, control);
+  predictor_->template GetControlInput<StateVec>(u, control);
   x_ += control;
 
 }
