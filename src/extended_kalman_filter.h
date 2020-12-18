@@ -34,11 +34,6 @@ class ExtendedKalmanFilter {
   void InitUncertainty(const StateMat& process_noise,
                        const MeasMat& measurement_noise);
 
-
-  void SetControlInputFunction(const StateMat& B) {
-    B_ = B;
-  }
-
   void SetPredictor(std::unique_ptr<TPredictor>&& predictor) { predictor_ = std::move(predictor); }
   void SetUpdater(std::unique_ptr<TUpdater>&& updater) {updater_ = std::move(updater); }
   
@@ -53,10 +48,7 @@ class ExtendedKalmanFilter {
   StateMat Q_;
   MeasMat R_;
 
-  StateMat B_;  // Control model
-
   std::unique_ptr<TPredictor> predictor_;
-
   std::unique_ptr<TUpdater> updater_;
 };
 
@@ -70,7 +62,10 @@ void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Predict(f
 template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
 void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Predict(const StateVec& u, float dt) {
   Predict(dt);
-  x_ += B_ * u;
+  StateVec control; 
+  predictor_->template ApplyControlInput<StateVec>(u, control);
+  x_ += control;
+
 }
 
 template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
