@@ -5,6 +5,27 @@
 
 namespace KalmanCpp::type_traits {
 
+
+template <typename T >
+struct remove_cvref {
+  typedef std::remove_cv_t<std::remove_reference_t<T>> type;
+};
+
+template <typename T >
+using remove_cvref_t = typename remove_cvref<T>::type;
+
+
+
+template <typename T>
+struct smart_pointer {
+  typedef remove_cvref_t<decltype(*T())> underlying_type;
+};
+
+template <typename T>
+using smart_pointer_t = typename smart_pointer<T>::underlying_type;
+
+
+
 template <typename T>
 struct has_get_prediction {
   struct Dummy {};
@@ -25,6 +46,28 @@ template <typename T>
 inline constexpr bool has_get_prediction_v = has_get_prediction<T>::value;
 
 
+
+template <typename T>
+struct has_apply_control_input {
+  struct Dummy {};
+
+  template <typename C, typename Dummy1>
+  static auto Test(Dummy1* d1, Dummy1* d2)
+      -> decltype(std::declval<C>().GetControlInput(*d1, *d2), std::true_type());
+
+  template <typename, typename>
+  static std::false_type Test(...);
+
+  typedef decltype(Test<T, Dummy>(nullptr, nullptr)) type;
+  static const bool value =
+      std::is_same<std::true_type, type>::value;
+};
+
+template <typename T> 
+inline constexpr bool has_apply_control_input_v = has_apply_control_input<T>::value;
+
+
+
 template <typename T>
 struct has_get_measurement {
   struct Dummy {};
@@ -43,6 +86,7 @@ struct has_get_measurement {
 
 template <typename T> 
 inline constexpr bool has_get_measurement_v = has_get_measurement<T>::value;
+
 
 
 template <typename T>

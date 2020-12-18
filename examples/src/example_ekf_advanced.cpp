@@ -6,7 +6,6 @@
 #include <chrono>
 #include <random>
 #include <cmath>
-#include <iostream>
 
 #include <matplot/matplot.h>
 
@@ -106,6 +105,13 @@ struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 4, Kalm
     out(3) = in(3);
   }
 
+  template <typename ControlMat>
+  void GetControlInput(const ControlMat& control_input, ControlMat& control_out) {
+    Eigen::MatrixXf B = Eigen::MatrixXf::Zero(4,4); // Control model matrix
+    B(3,3) = 1.0f;
+    control_out = B * control_input;
+  }
+
 };
 
 struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 4, 2, KalmanCpp::JacobianMethod::Numerical> {
@@ -145,11 +151,6 @@ KalmanCpp::ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater> Setu
 
   std::unique_ptr<MyUpdater> updater = std::make_unique<MyUpdater>();
   kf.SetUpdater(std::move(updater));
-
-  // // Control input
-  Eigen::MatrixXf B = Eigen::MatrixXf::Zero(4,4);
-  B(3,3) = 1.0f;
-  kf.SetControlInputFunction(B);
 
   return kf;
 }
@@ -193,7 +194,6 @@ void RunExample() {
     Eigen::Vector2f estimate;
     estimate << kf.State()(0), kf.State()(2);
     estimates.push_back(estimate);
-    std::cout << "---\n" << estimate << std::endl;
   }
 
   PlotResult(measurements, estimates);
