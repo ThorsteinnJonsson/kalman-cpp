@@ -1,43 +1,7 @@
 #include "extended_kalman_filter.h"
 #include "examples_common.h"
 #include "ball_simulator.h"
-
-
-void PlotResult(const std::vector<Eigen::Vector2f>& measurements,
-                const std::vector<Eigen::Vector2f>& estimates) {
-  std::vector<double> x_meas;
-  std::vector<double> y_meas;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(x_meas),
-                 [](const Eigen::Vector2f& m) { return m(0); });
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(y_meas),
-                 [](const Eigen::Vector2f& m) { return m(1); });
-
-  matplot::plot(x_meas, y_meas, "o")->marker_size(6);
-  matplot::hold(matplot::on);
-
-
-  std::vector<double> x_est;
-  std::vector<double> y_est;
-  std::transform(estimates.begin(),
-                 estimates.end(),
-                 std::back_inserter(x_est),
-                 [](const Eigen::Vector2f& m) { return m(0); });
-  std::transform(estimates.begin(),
-                 estimates.end(),
-                 std::back_inserter(y_est),
-                 [](const Eigen::Vector2f& m) { return m(1); });
-
-  matplot::plot(x_est, y_est, "-")->line_width(4);
-  matplot::hold(matplot::on);
-
-
-  matplot::axis(matplot::equal);
-  matplot::show();
-}
+#include "example_plotting.h"
 
 
 struct MyPredictor : public KalmanCpp::BasePredictor<MyPredictor, float, 4, KalmanCpp::JacobianMethod::Numerical> {
@@ -142,7 +106,7 @@ void RunExample() {
     estimates.push_back(estimate);
   }
 
-  PlotResult(measurements, estimates);
+  PlotBallSim(measurements, estimates);
 }
 
 

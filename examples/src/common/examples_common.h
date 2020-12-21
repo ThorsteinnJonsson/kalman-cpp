@@ -8,5 +8,13 @@
 #include <vector>
 
 #include <matplot/matplot.h>
+#include <eigen3/Eigen/Core>
+
+struct Measurement {
+  float ground_truth;
+  float value;
+  float timestamp;
+};
+
 
 #endif  // KALMAN_CPP_EXAMPLES_COMMON_H

@@ -3,13 +3,6 @@
 
 #include "examples_common.h"
 
-struct Measurement {
-  float ground_truth;
-  float value;
-  float timestamp;
-};
-
-
 std::vector<Measurement> GenerateMeasurements(float meas_var,
                                               float process_var,
                                               float dt = 1.0f,

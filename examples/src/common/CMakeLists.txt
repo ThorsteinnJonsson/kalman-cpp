@@ -5,6 +5,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/Utils.cmake)
 
 
 add_library(${ExampleCommonLib}
+    example_plotting.cpp
     ball_simulator.cpp
     straight_line_measurements.cpp)
 
@@ -13,6 +14,7 @@ target_link_libraries(
   ${ExampleCommonLib}
   PRIVATE
     ${CMAKE_PROJECT_NAME}
+    CONAN_PKG::eigen
 )
 
 target_include_directories(${ExampleCommonLib}

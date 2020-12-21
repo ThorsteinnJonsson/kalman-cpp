@@ -1,59 +1,7 @@
 #include "extended_kalman_filter.h"
 #include "examples_common.h"
 #include "straight_line_measurements.h"
-
-
-void PlotResult(const std::vector<Measurement>& measurements,
-                const std::vector<Eigen::VectorXf>& track,
-                float true_meas_var) {
-  std::vector<double> time;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(time),
-                 [](const Measurement& m) { return m.timestamp; });
-  std::vector<double> ground_truth;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(ground_truth),
-                 [](const Measurement& m) { return m.ground_truth; });
-  std::vector<double> upper_std;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(upper_std),
-                 [&](const Measurement& m) {
-                   return m.ground_truth + std::sqrt(true_meas_var);
-                 });
-  std::vector<double> lower_std;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(lower_std),
-                 [&](const Measurement& m) {
-                   return m.ground_truth - std::sqrt(true_meas_var);
-                 });
-
-  std::vector<double> measured_values;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(measured_values),
-                 [](const Measurement& m) { return m.value; });
-
-  std::vector<double> kf_result;
-  std::transform(track.begin(),
-                 track.end(),
-                 std::back_inserter(kf_result),
-                 [](const Eigen::VectorXf& t) { return t(0); });
-
-  matplot::plot(time, ground_truth, "-")->line_width(4);
-  matplot::hold(matplot::on);
-  matplot::plot(time, upper_std, "--")->line_width(1).color("k");
-  matplot::hold(matplot::on);
-  matplot::plot(time, lower_std, "--")->line_width(1).color("k");
-  matplot::hold(matplot::on);
-  matplot::plot(time, measured_values, "x")->marker_size(6);
-  matplot::hold(matplot::on);
-  matplot::plot(time, kf_result, "-")->line_width(4);
-  matplot::show();
-}
+#include "example_plotting.h"
 
 
 // Define a predictor for the EKF. GetPrediction always has to be defined. GetJacobian only has to be defined if
@@ -92,6 +40,7 @@ struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanC
   }
 
 };
+
 
 template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
 KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor, TUpdater> SetupFilter(
@@ -152,7 +101,7 @@ void RunExample() {
     track.push_back(kf.State());
   }
 
-  PlotResult(measurements, track, true_meas_var);
+  PlotStraightLineExample(measurements, track, true_meas_var);
 }
 
 int main() {
