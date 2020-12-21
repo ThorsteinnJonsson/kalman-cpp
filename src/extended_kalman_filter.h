@@ -41,6 +41,9 @@ class ExtendedKalmanFilter {
   const StateVec& State() const { return x_; }
   const StateMat& Uncertainty() const { return P_; }
 
+  const StateMat& ProcessNoise() const { return Q_;}
+  const MeasMat& MeasurementNoise() const { return R_; }
+
  private:
   StateVec x_ = StateVec::Zero();
   StateMat P_ = StateMat::Zero();
