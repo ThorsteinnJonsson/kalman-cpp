@@ -11,8 +11,7 @@ project(
 
 verbose_message("Adding examples under ${CMAKE_PROJECT_NAME}Examples...")
 
-include(${CMAKE_SOURCE_DIR}/cmake/Utils.cmake)
-
+add_subdirectory(src/common)
 
 #
 # Simple Extended Kalman filter using Jacobians derived numerically
@@ -23,9 +22,8 @@ target_link_libraries(
   EXAMPLE_EKF_NUMERICAL
   PRIVATE
     ${CMAKE_PROJECT_NAME}
-    CONAN_PKG::eigen
+    ${CMAKE_PROJECT_NAME}ExamplesCommon 
 )
-target_link_libraries_system(EXAMPLE_EKF_NUMERICAL PRIVATE matplot)
 
 #
 # Simple Extended Kalman filter using Jacobians derived analytically
@@ -36,9 +34,8 @@ target_link_libraries(
   EXAMPLE_EKF_ANALYTICAL
   PRIVATE
     ${CMAKE_PROJECT_NAME}
-    CONAN_PKG::eigen
+    ${CMAKE_PROJECT_NAME}ExamplesCommon 
 )
-target_link_libraries_system(EXAMPLE_EKF_ANALYTICAL PRIVATE matplot)
 
 
 #
@@ -50,5 +47,5 @@ target_link_libraries(
   EXAMPLE_EKF_ADVANCED
   PRIVATE
     ${CMAKE_PROJECT_NAME}
+    ${CMAKE_PROJECT_NAME}ExamplesCommon 
 )
-target_link_libraries_system(EXAMPLE_EKF_ADVANCED PRIVATE matplot)

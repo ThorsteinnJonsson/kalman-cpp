@@ -1,101 +1,7 @@
-#include <iostream>
-
 #include "extended_kalman_filter.h"
-
-#include <algorithm>
-#include <chrono>
-#include <cmath>
-#include <iostream>
-#include <random>
-
-#include <matplot/matplot.h>
-
-
-struct Measurement {
-  float ground_truth;
-  float value;
-  float timestamp;
-};
-
-std::vector<Measurement> GenerateMeasurements(float meas_var,
-                                              float process_var,
-                                              float dt = 1.0f,
-                                              size_t count = 50) {
-  std::random_device rd{};
-  std::mt19937 gen{rd()};
-  std::normal_distribution<float> dist;
-
-  float pos = 0.0f;
-  float vel = 1.0f;
-
-  float meas_std = std::sqrt(meas_var);
-  float process_std = std::sqrt(process_var);
-
-  std::vector<Measurement> measurements;
-  measurements.reserve(count);
-  for (size_t i = 0; i < count; ++i) {
-    Measurement m;
-    float v = vel + dist(gen) * process_std;
-    pos += v * dt;
-    m.ground_truth = pos;
-    m.value = pos + dist(gen) * meas_std;
-    m.timestamp = dt * i;
-    measurements.push_back(m);
-  }
-  return measurements;
-}
-
-void PlotResult(const std::vector<Measurement>& measurements,
-                const std::vector<Eigen::VectorXf>& track,
-                float true_meas_var) {
-  std::vector<double> time;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(time),
-                 [](const Measurement& m) { return m.timestamp; });
-  std::vector<double> ground_truth;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(ground_truth),
-                 [](const Measurement& m) { return m.ground_truth; });
-  std::vector<double> upper_std;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(upper_std),
-                 [&](const Measurement& m) {
-                   return m.ground_truth + std::sqrt(true_meas_var);
-                 });
-  std::vector<double> lower_std;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(lower_std),
-                 [&](const Measurement& m) {
-                   return m.ground_truth - std::sqrt(true_meas_var);
-                 });
-
-  std::vector<double> measured_values;
-  std::transform(measurements.begin(),
-                 measurements.end(),
-                 std::back_inserter(measured_values),
-                 [](const Measurement& m) { return m.value; });
-
-  std::vector<double> kf_result;
-  std::transform(track.begin(),
-                 track.end(),
-                 std::back_inserter(kf_result),
-                 [](const Eigen::VectorXf& t) { return t(0); });
-
-  matplot::plot(time, ground_truth, "-")->line_width(4);
-  matplot::hold(matplot::on);
-  matplot::plot(time, upper_std, "--")->line_width(1).color("k");
-  matplot::hold(matplot::on);
-  matplot::plot(time, lower_std, "--")->line_width(1).color("k");
-  matplot::hold(matplot::on);
-  matplot::plot(time, measured_values, "x")->marker_size(6);
-  matplot::hold(matplot::on);
-  matplot::plot(time, kf_result, "-")->line_width(4);
-  matplot::show();
-}
+#include "examples_common.h"
+#include "straight_line_measurements.h"
+#include "example_plotting.h"
 
 
 // Define a predictor for the EKF. GetPrediction always has to be defined. GetJacobian only has to be defined if
@@ -122,6 +28,7 @@ struct MyUpdater : public KalmanCpp::BaseUpdater<MyUpdater, float, 2, 1, KalmanC
   }
 
 };
+
 
 template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
 KalmanCpp::ExtendedKalmanFilter<float, StateDim, MeasDim, TPredictor, TUpdater> SetupFilter(
@@ -182,7 +89,7 @@ void RunExample() {
     track.push_back(kf.State());
   }
 
-  PlotResult(measurements, track, true_meas_var);
+  PlotStraightLineExample(measurements, track, true_meas_var);
 }
 
 int main() {
