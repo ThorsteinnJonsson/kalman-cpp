@@ -87,7 +87,7 @@ void RunExample() {
   constexpr float true_meas_var = 10.0f;
   constexpr float true_process_var = 0.1f;
   std::vector<Measurement> measurements =
-      GenerateMeasurements(true_meas_var, true_process_var, dt, num_meas);
+      GenerateStraightLineMeasurements(true_meas_var, true_process_var, dt, num_meas);
 
   // Run simulation
   std::vector<Eigen::VectorXf> track;
