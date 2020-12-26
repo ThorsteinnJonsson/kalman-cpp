@@ -18,6 +18,8 @@ verbose_message("Adding tests under ${CMAKE_PROJECT_NAME}Tests...")
 set(test_sources 
   src/test_main.cpp
   src/test_ekf_setup.cpp
+  src/test_ekf_prediction.cpp
+  src/test_ekf_update.cpp
 )
 add_executable(${PROJECT_NAME} ${test_sources})
 

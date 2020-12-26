@@ -3,9 +3,6 @@
 
 using namespace KalmanCpp;
 
-
-
-
 class TestEkfSetup : public ::testing::Test {
  protected:
   static constexpr int StateDim = 2;
