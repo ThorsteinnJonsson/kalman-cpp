@@ -3,7 +3,7 @@
 
 #include "examples_common.h"
 
-std::vector<Measurement> GenerateMeasurements(float meas_var,
+std::vector<Measurement> GenerateStraightLineMeasurements(float meas_var,
                                               float process_var,
                                               float dt = 1.0f,
                                               size_t count = 50);

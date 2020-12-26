@@ -1,6 +1,6 @@
 #include "straight_line_measurements.h"
 
-std::vector<Measurement> GenerateMeasurements(float meas_var,
+std::vector<Measurement> GenerateStraightLineMeasurements(float meas_var,
                                               float process_var,
                                               float dt,
                                               size_t count) {
