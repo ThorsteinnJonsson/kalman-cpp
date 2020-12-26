@@ -20,6 +20,7 @@ set(test_sources
   src/test_ekf_setup.cpp
   src/test_ekf_prediction.cpp
   src/test_ekf_update.cpp
+  src/test_numerical_jacobian.cpp
 )
 add_executable(${PROJECT_NAME} ${test_sources})
 
