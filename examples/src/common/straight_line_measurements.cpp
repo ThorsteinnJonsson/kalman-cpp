@@ -1,9 +1,9 @@
 #include "straight_line_measurements.h"
 
 std::vector<Measurement> GenerateStraightLineMeasurements(float meas_var,
-                                              float process_var,
-                                              float dt,
-                                              size_t count) {
+                                                          float process_var,
+                                                          float dt,
+                                                          size_t count) {
   std::random_device rd{};
   std::mt19937 gen{rd()};
   std::normal_distribution<float> dist;
