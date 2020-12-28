@@ -43,7 +43,6 @@ endif()
 #
 
 include(cmake/Conan.cmake)
-include(cmake/Vcpkg.cmake)
 
 #
 # Create library, setup header and source files

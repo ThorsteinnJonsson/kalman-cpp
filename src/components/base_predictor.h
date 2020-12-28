@@ -5,8 +5,8 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/unsupported/Eigen/AutoDiff>
 
-#include "filter_utils.h"
-#include "internal/type_traits.h"
+#include "util/filter_utils.h"
+#include "util/type_traits.h"
 
 
 namespace KalmanCpp {
