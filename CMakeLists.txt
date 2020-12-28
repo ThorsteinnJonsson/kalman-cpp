@@ -89,11 +89,6 @@ set_project_warnings(${PROJECT_NAME})
 
 verbose_message("Applied compiler warnings. Using standard ${CXX_STANDARD}.\n")
 
-#
-# Enable Doxygen
-#
-
-include(cmake/Doxygen.cmake)
 
 #
 # Set the build/user include directories
