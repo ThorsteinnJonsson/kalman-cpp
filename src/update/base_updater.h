@@ -9,7 +9,12 @@
 
 namespace KalmanCpp {
 
-template <typename Derived, typename Scalar, int StateDim, int MeasDim, JacobianMethod Method>
+template <typename Derived, 
+          typename Scalar, 
+          int StateDim, 
+          int MeasDim, 
+          JacobianMethod Method,
+          typename = std::enable_if_t<std::is_floating_point<Scalar>::value>>
 class BaseUpdater {
  private:
   static constexpr void CompileTimeTypeValidation() {
@@ -22,6 +27,7 @@ class BaseUpdater {
   BaseUpdater() noexcept { CompileTimeTypeValidation(); }
 
  public:
+  typedef Scalar ScalarType;
   typedef Eigen::Matrix<Scalar, StateDim, 1> InputType;
   typedef Eigen::Matrix<Scalar, MeasDim, 1> ValueType;
   typedef Eigen::Matrix<Scalar, MeasDim, StateDim> JacobianType;

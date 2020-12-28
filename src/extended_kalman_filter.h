@@ -74,6 +74,8 @@ class ExtendedKalmanFilter {
   void SetPredictor(std::unique_ptr<TPredictor>&& predictor) { 
     static_assert(TPredictor::InputsAtCompileTime == StateDim, 
             "Predictor dimensions do not match the Kalman filter dimensions");
+    static_assert(std::is_same<typename TPredictor::ScalarType, T>::value, 
+            "Predictor scalar type does not match the Kalman filter type.");
     predictor_ = std::move(predictor);
   }
 
@@ -81,6 +83,8 @@ class ExtendedKalmanFilter {
   void SetUpdater(std::unique_ptr<TUpdater>&& updater) {
     static_assert(TUpdater::InputsAtCompileTime == StateDim && TUpdater::ValuesAtCompileTime == MeasDim,
             "Updater dimensions do not match the Kalman filter dimensions");
+    static_assert(std::is_same<typename TUpdater::ScalarType, T>::value, 
+            "Updater scalar type does not match the Kalman filter type.");
     updater_ = std::move(updater);
   }
   
