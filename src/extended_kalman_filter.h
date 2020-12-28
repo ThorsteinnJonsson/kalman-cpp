@@ -34,8 +34,16 @@ class ExtendedKalmanFilter {
   void InitUncertainty(const StateMat& process_noise,
                        const MeasMat& measurement_noise);
 
-  void SetPredictor(std::unique_ptr<TPredictor>&& predictor) { predictor_ = std::move(predictor); }
-  void SetUpdater(std::unique_ptr<TUpdater>&& updater) {updater_ = std::move(updater); }
+  void SetPredictor(std::unique_ptr<TPredictor>&& predictor) { 
+    static_assert(TPredictor::InputsAtCompileTime == StateDim, 
+            "Predictor dimensions do not match the Kalman filter dimensions");
+    predictor_ = std::move(predictor);
+  }
+  void SetUpdater(std::unique_ptr<TUpdater>&& updater) {
+    static_assert(TUpdater::InputsAtCompileTime == StateDim && TUpdater::ValuesAtCompileTime == MeasDim,
+            "Updater dimensions do not match the Kalman filter dimensions");
+    updater_ = std::move(updater);
+  }
   
 
   const StateVec& State() const { return x_; }
