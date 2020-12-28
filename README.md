@@ -34,6 +34,8 @@ If you are only interested in using the **KalmanCpp** library inside your own pr
 Building the library as a standalone-project should only be needed if you plan on contributing to the project or
 if you want to run the examples.
 
+First clone the repository and run `git submodule update --init` to update the submodules used in the example.
+
 We recommend building your library through an editor such as *CLion*, *Visual Studio* or *Visual Studio Code*.
 If you want to build from the terminal however, you can run the following commands from the library root directory:
 
