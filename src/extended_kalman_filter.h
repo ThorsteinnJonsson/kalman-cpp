@@ -15,7 +15,8 @@ template <typename T,
           int StateDim, 
           int MeasDim, 
           typename TPredictor, 
-          typename TUpdater>
+          typename TUpdater,
+          typename = std::enable_if_t<std::is_floating_point<T>::value>>
 class ExtendedKalmanFilter {
  private:
   using StateVec = Eigen::Matrix<T, StateDim, 1>;
