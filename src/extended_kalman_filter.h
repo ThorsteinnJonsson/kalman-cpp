@@ -3,8 +3,6 @@
 
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
-#include <functional>
-#include <optional>
 #include <memory>
 
 #include "filter_utils.h"
@@ -13,7 +11,11 @@
 
 namespace KalmanCpp {
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
+template <typename T, 
+          int StateDim, 
+          int MeasDim, 
+          typename TPredictor, 
+          typename TUpdater>
 class ExtendedKalmanFilter {
  private:
   using StateVec = Eigen::Matrix<T, StateDim, 1>;
