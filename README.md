@@ -50,6 +50,8 @@ To include **KalmanCpp** in your own project, you can clone the library as a sub
 `add_subdirectory(kalman_cpp)` command in your `CMakeLists.txt` file. You will also need to link the 
 library to your project using the `target_link_libraries` command in *CMake*.
 
+Note the option for building the examples if you do not with to build them, see in [cmake/StandardSettings.cmake](cmake/StandardSettings.cmake). 
+
 
 ## Running the tests
 
