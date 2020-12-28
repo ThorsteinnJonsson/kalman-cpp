@@ -27,7 +27,9 @@ machine for development and testing purposes.
 
 * **Conan (package manager)** - Used for managing dependancies such as the Eigen library. More information [here](https://conan.io/).
 
+
 ### Building the library (as a standalone project)
+
 If you are only interested in using the **KalmanCpp** library inside your own project, skip to the next section.
 Building the library as a standalone-project should only be needed if you plan on contributing to the project or
 if you want to run the examples.
@@ -41,6 +43,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -GNinja .. && ninja
 ```
 
 ### Including KalmanCpp in your own project
+
 To include **KalmanCpp** in your own project, you can clone the library as a submodule and use the 
 `add_subdirectory(kalman_cpp)` command in your `CMakeLists.txt` file. You will also need to link the 
 library to your project using the `target_link_libraries` command in *CMake*.
@@ -80,6 +83,6 @@ existing versions can be found in the
 * **Thorsteinn Jonsson** - [@ThorsteinnJonsson](https://github.com/ThorsteinnJonsson)
 
 ## License
-TBD
-<!-- This project is licensed under the [Unlicense](https://unlicense.org/) - see the
-[LICENSE](LICENSE) file for details -->
+
+This project is licensed under the [MIT license](https://en.wikipedia.org/wiki/MIT_License) - see the
+[LICENSE](LICENSE) file for details
