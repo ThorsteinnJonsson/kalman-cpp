@@ -1,5 +1,5 @@
 set(sources
-  src/temp.cpp
+  ""
 )
 
 set(exe_sources

@@ -70,7 +70,8 @@ verbose_message(${headers})
 verbose_message("Found the following source files:")
 if(${PROJECT_NAME}_BUILD_EXECUTABLE)
 	verbose_message(${exe_sources})
-else()
+endif()
+if(!${PROJECT_NAME}_BUILD_HEADERS_ONLY)
 	verbose_message(${sources})
 endif()
 message(STATUS "Added all header and implementation files.\n")
@@ -104,8 +105,10 @@ if(${PROJECT_NAME}_BUILD_HEADERS_ONLY)
   target_include_directories(
     ${PROJECT_NAME}
     INTERFACE 
-      $<INSTALL_INTERFACE:include>    
+      $<INSTALL_INTERFACE:include>
+      $<INSTALL_INTERFACE:src>
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   )
 else()
   target_include_directories(
@@ -137,7 +140,7 @@ message(STATUS "Finished setting up include directories.")
 #
 
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE
+  INTERFACE
   CONAN_PKG::eigen
 )
 
