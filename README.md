@@ -4,6 +4,7 @@ Kalman filter library written in C++17 with an emphasis on templates. This libra
 
 Currently, only an **extended Kalman filter** (EKF) base implementation is available. The user implements their own prediction and update steps and passes to the filter. The library also allows the user to choose between using numerical and analytical methods for calculating Jacobians, further simplifying implementation. For further details, see the [example folder](examples/).
 
+![EKF demo image](./demo.png)
 
 ## Getting started
 
