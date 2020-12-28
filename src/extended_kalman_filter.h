@@ -3,8 +3,6 @@
 
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
-#include <functional>
-#include <optional>
 #include <memory>
 
 #include "filter_utils.h"
@@ -13,7 +11,12 @@
 
 namespace KalmanCpp {
 
-template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater> // TODO check if T is floating
+template <typename T, 
+          int StateDim, 
+          int MeasDim, 
+          typename TPredictor, 
+          typename TUpdater,
+          typename = std::enable_if_t<std::is_floating_point<T>::value>>
 class ExtendedKalmanFilter {
  private:
   using StateVec = Eigen::Matrix<T, StateDim, 1>;
@@ -26,16 +29,64 @@ class ExtendedKalmanFilter {
  public:
   ExtendedKalmanFilter() = default;
 
-  void Predict(float dt);
-  void Predict(const StateVec& u, float dt);
-  void Update(const MeasVec& z);
+  void Predict(float dt) {
+    auto [x_new, jacobian] = predictor_->template Predict<StateVec,StateVec,StateMat>(x_, dt);
+    x_ = x_new;
+    P_ = jacobian * P_ * jacobian.transpose() + Q_;    
+  }
 
-  void InitState(const StateVec& state, const StateMat& cov);
+
+  void Predict(const StateVec& u, float dt) {
+    static_assert(type_traits::has_apply_control_input_v<type_traits::smart_pointer_t<decltype(predictor_)>>, 
+                                      "You need to define the GetControlInput member function of your predictor "
+                                      "to be able to use the Predict function with control input.");
+    Predict(dt);
+    StateVec control; 
+    predictor_->template GetControlInput<StateVec>(u, control);
+    x_ += control;
+  }
+
+
+  void Update(const MeasVec& z) {
+    auto [z_hat, H] = updater_->template Update<StateVec,MeasVec,ObservationModelMat>(x_);
+    const Eigen::VectorXf y = z - z_hat;
+    const Eigen::MatrixXf S = (H * P_ * H.transpose() + R_);
+    const Eigen::MatrixXf K = P_ * H.transpose() * S.inverse();
+    const Eigen::MatrixXf I = StateMat::Identity();
+    x_ = x_ + K * y;
+    P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
+  }
+
+
+  void InitState(const StateVec& state, const StateMat& cov) {
+    x_ = state;
+    P_ = cov;
+  }
+
+
   void InitUncertainty(const StateMat& process_noise,
-                       const MeasMat& measurement_noise);
+                       const MeasMat& measurement_noise) {
+    Q_ = process_noise;
+    R_ = measurement_noise;
+  }
 
-  void SetPredictor(std::unique_ptr<TPredictor>&& predictor) { predictor_ = std::move(predictor); }
-  void SetUpdater(std::unique_ptr<TUpdater>&& updater) {updater_ = std::move(updater); }
+
+  void SetPredictor(std::unique_ptr<TPredictor>&& predictor) { 
+    static_assert(TPredictor::InputsAtCompileTime == StateDim, 
+            "Predictor dimensions do not match the Kalman filter dimensions");
+    static_assert(std::is_same<typename TPredictor::ScalarType, T>::value, 
+            "Predictor scalar type does not match the Kalman filter type.");
+    predictor_ = std::move(predictor);
+  }
+
+
+  void SetUpdater(std::unique_ptr<TUpdater>&& updater) {
+    static_assert(TUpdater::InputsAtCompileTime == StateDim && TUpdater::ValuesAtCompileTime == MeasDim,
+            "Updater dimensions do not match the Kalman filter dimensions");
+    static_assert(std::is_same<typename TUpdater::ScalarType, T>::value, 
+            "Updater scalar type does not match the Kalman filter type.");
+    updater_ = std::move(updater);
+  }
   
 
   const StateVec& State() const { return x_; }
@@ -54,51 +105,6 @@ class ExtendedKalmanFilter {
   std::unique_ptr<TPredictor> predictor_;
   std::unique_ptr<TUpdater> updater_;
 };
-
-template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Predict(float dt) {
-  auto [x_new, jacobian] = predictor_->template Predict<StateVec,StateVec,StateMat>(x_, dt);
-  x_ = x_new;
-  P_ = jacobian * P_ * jacobian.transpose() + Q_;
-}
-
-template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Predict(const StateVec& u, float dt) {
-  static_assert(type_traits::has_apply_control_input_v<type_traits::smart_pointer_t<decltype(predictor_)>>, 
-                                    "You need to define the GetControlInput member function of your predictor "
-                                    "to be able to use the Predict function with control input.");
-  
-  Predict(dt);
-  StateVec control; 
-  predictor_->template GetControlInput<StateVec>(u, control);
-  x_ += control;
-
-}
-
-template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::Update(const MeasVec& z) {
-  auto [z_hat, H] = updater_->template Update<StateVec,MeasVec,ObservationModelMat>(x_);
-  const Eigen::VectorXf y = z - z_hat;
-  const Eigen::MatrixXf S = (H * P_ * H.transpose() + R_);
-  const Eigen::MatrixXf K = P_ * H.transpose() * S.inverse();
-  const Eigen::MatrixXf I = StateMat::Identity();
-  x_ = x_ + K * y;
-  P_ = (I - K * H) * P_ * (I - K * H).transpose() + K * R_ * K.transpose();
-}
-
-template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::InitState(
-    const StateVec& state, const StateMat& cov) {
-  x_ = state;
-  P_ = cov;
-}
-
-template <typename T, int StateDim, int MeasDim, typename TPredictor, typename TUpdater>
-void ExtendedKalmanFilter<T, StateDim, MeasDim, TPredictor, TUpdater>::InitUncertainty(
-    const StateMat& process_noise, const MeasMat& measurement_noise) {
-  Q_ = process_noise;
-  R_ = measurement_noise;
-}
 
 }  // namespace KalmanCpp
 
