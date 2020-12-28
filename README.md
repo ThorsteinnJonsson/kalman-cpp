@@ -82,6 +82,17 @@ existing versions can be found in the
 
 * **Thorsteinn Jonsson** - [@ThorsteinnJonsson](https://github.com/ThorsteinnJonsson)
 
+## Acknowledgments
+
+We would like to thank the following:
+
+[filipdutescu's C++ project template](https://github.com/filipdutescu/modern-cpp-template) for providing an excellent project template
+that helped get this project started.
+
+[alandefreitas' Matplot++ library](https://github.com/alandefreitas/matplotplusplus), a C++ Graphics Library for Data Visualization used
+in out examples.
+
+
 ## License
 
 This project is licensed under the [MIT license](https://en.wikipedia.org/wiki/MIT_License) - see the
