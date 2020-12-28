@@ -11,12 +11,12 @@ project(
 
 verbose_message("Adding examples under ${CMAKE_PROJECT_NAME}Examples...")
 
-add_subdirectory(src/common)
+add_subdirectory(common)
 
 #
 # Simple Extended Kalman filter using Jacobians derived numerically
 #
-add_executable(EXAMPLE_EKF_NUMERICAL src/example_ekf_numerical.cpp)
+add_executable(EXAMPLE_EKF_NUMERICAL example_ekf_numerical.cpp)
 target_compile_features(EXAMPLE_EKF_NUMERICAL PUBLIC cxx_std_17)
 target_link_libraries(
   EXAMPLE_EKF_NUMERICAL
@@ -28,7 +28,7 @@ target_link_libraries(
 #
 # Simple Extended Kalman filter using Jacobians derived analytically
 #
-add_executable(EXAMPLE_EKF_ANALYTICAL src/example_ekf_analytical.cpp)
+add_executable(EXAMPLE_EKF_ANALYTICAL example_ekf_analytical.cpp)
 target_compile_features(EXAMPLE_EKF_ANALYTICAL PUBLIC cxx_std_17)
 target_link_libraries(
   EXAMPLE_EKF_ANALYTICAL
@@ -41,7 +41,7 @@ target_link_libraries(
 #
 # Example usage of the Extended Kalman filter. (Not neccesarily "advanced", find better name later)
 #
-add_executable(EXAMPLE_EKF_ADVANCED src/example_ekf_advanced.cpp)
+add_executable(EXAMPLE_EKF_ADVANCED example_ekf_advanced.cpp)
 target_compile_features(EXAMPLE_EKF_ADVANCED PUBLIC cxx_std_17)
 target_link_libraries(
   EXAMPLE_EKF_ADVANCED

@@ -5,9 +5,8 @@
 #include <eigen3/Eigen/LU>
 #include <memory>
 
-#include "filter_utils.h"
-#include "predict/base_predictor.h"
-#include "update/base_updater.h"
+#include "components/base_predictor.h"
+#include "components/base_updater.h"
 
 namespace KalmanCpp {
 

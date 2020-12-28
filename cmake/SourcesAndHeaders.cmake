@@ -1,5 +1,5 @@
 set(sources
-  src/temp.cpp
+  ""
 )
 
 set(exe_sources
@@ -9,8 +9,8 @@ set(exe_sources
 
 set(headers
   src/extended_kalman_filter.h
-  src/filter_utils.h
-  src/predict/base_predictor.h
-  src/update/base_updater.h
-  src/internal/type_traits.h
+  src/util/filter_utils.h
+  src/util/type_traits.h
+  src/components/base_predictor.h
+  src/components/base_updater.h
 )
